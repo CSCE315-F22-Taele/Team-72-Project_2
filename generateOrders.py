@@ -9,7 +9,7 @@ sauces = ["Jalapeno Ranch", "Pineapple Salsa", "Tomatillo Verde Sauce", "Lime Cr
 rice = ["White Rice", "Spanish Rice"]
 beans = ["Black Beans", "Pinto Beans"]
 cheese = ["Cheddar Cheese", "American Cheese"]
-toppings = ["Pico", "Corn", "Lettuce", "Spinach", "Tomatos", "Onions"]
+toppings = ["Pico", "Corn", "Lettuce", "Spinach", "Tomatoes", "Onions"]
 sides = ["Chips & Salsa", "Chips & Queso", "Chips & Guac"]
 drinks = ["16oz Fountain Drink", "32oz Fountain Drink", "Canned Drink"]
 
