@@ -39,19 +39,17 @@ public class jdbcpostgreSQL{
      System.out.println("Opened database successfully");
 
      try{
-       //create a statement object
        Statement stmt = conn.createStatement();
-
        String[] queries = {"SELECT AVG(inventory) FROM item",
        "SELECT AVG(restock_amount) FROM item",
-       "SELECT * FROM item WHERE inventory<=50",
-       "SELECT * FROM item WHERE inventory>=150",
-       "SELECT * FROM item ORDER BY type ASC",
+       "SELECT id, name, inventory FROM item WHERE inventory<=50 LIMIT 10",
+       "SELECT * FROM item WHERE inventory>=150 LIMIT 10",
+       "SELECT * FROM item ORDER BY type ASC LIMIT 10",
        "SELECT AVG(price) FROM customer_orders",
-       "SELECT * FROM customer_orders ORDER BY id ASC",
-       "SELECT * FROM customer_orders ORDER BY time_of_order ASC",
-       "SELECT  FROM customer_orders ORDER BY employee_id DESC",
-       "SELECT * FROM customer_order_items ORDER BY name ASC",
+       "SELECT * FROM customer_orders ORDER BY id ASC LIMIT 10",
+       "SELECT * FROM customer_orders ORDER BY time_of_order ASC LIMIT 10",
+       "SELECT * FROM customer_orders ORDER BY employee_id DESC LIMIT 10",
+       "SELECT * FROM customer_order_items ORDER BY name ASC LIMIT 10",
        "SELECT AVG(price) FROM customer_order_items",
        "SELECT * FROM employee ORDER BY last_name ASC",
        "SELECT * FROM employee ORDER BY last_name DESC",
@@ -59,11 +57,25 @@ public class jdbcpostgreSQL{
        "SELECT * FROM employee ORDER BY first_name DESC"};
 
        System.out.println("--------------------Query Results--------------------");
-       for(int i = 0; i < queries.length; i++){
+       for(int i = 0; i < queries.length; i++){ //loops through query array
         ResultSet result = stmt.executeQuery(queries[i]);
+        ResultSetMetaData rsmd = result.getMetaData();
+
+        System.out.println(queries[i]); //prints current query
+        System.out.println("----------------------------------------------------");
+
+        int columnsNumber = rsmd.getColumnCount();
+        
+        //formats and prints ResultSet of current query
         while (result.next()) {
-          System.out.println(result.getString(""));
+          for (int j = 1; j <= columnsNumber; j++) {
+           if (j > 1) System.out.print(",  ");
+            String columnValue = result.getString(j);
+            System.out.print(columnValue);
+          }
+          System.out.println("");
         }
+        System.out.println();
        }
 
    } catch (Exception e){
