@@ -2,11 +2,22 @@ import java.sql.*;
 import java.util.Scanner;  
 import java.io.File;
 
+/* This program fills up any datatable with values in a csv file. 
+ * Each value in the csv file matches the corresponding datatable column. 
+ * Each row in the csv file represents a row in the datatable.
+ * Compile: javac FillDataTable.java
+ * Execute: java -cp ".:postgresql-42.2.8.jar" FillDataTable <csv file path name> <datatable name>
+ * OR (if you want to use hardcoded values): java -cp ".:postgresql-42.2.8.jar" FillDataTable 
+ */
+
 public class FillDataTable{
     public static final String user = "csce331_906_krueger";
     public static final String pswd = "730001845";
 
-    //Determines if word has atleast 1 non-numeric char
+    /** Determines if a string is not numeric
+     * @param word string to be tested
+     * @return boolean if it is not a numerical value
+     */
     public static boolean isNotNumeric(String word) {
         try{
             Double.parseDouble(word);
@@ -16,7 +27,10 @@ public class FillDataTable{
         return false;
     }
 
-    //Tokenize manually
+    /** Tokenize string manually by putting single quotes around non-numeric tokens
+     * @param line string to be tokenized
+     * @return tokenized string
+     */
     public static String tokenize(String line){
         int i = 0;
         int j = 0; 
@@ -74,10 +88,10 @@ public class FillDataTable{
             conn = DriverManager.getConnection(dbConnectionString, user, pswd);
             System.out.println("Opened database successfully");
 
-            //parsing a CSV file into Scanner class constructor & set delimiter pattern
+            //Parsing a CSV file into Scanner class constructor & set delimiter pattern
             Scanner sc = new Scanner(new File(path_name));  
             
-            //create a statement object
+            //Create a statement object
             Statement stmt = conn.createStatement();
             
             //Running multiple queries
@@ -87,7 +101,7 @@ public class FillDataTable{
                 String sqlStatement = "INSERT INTO " + table_name +" VALUES";
                 sqlStatement += tokenize(line);
 
-                //Send Statement to DBMS
+                //Send statement to DBMS
                 try{
                     stmt.executeQuery(sqlStatement);
                 }catch(Exception e){
@@ -108,7 +122,7 @@ public class FillDataTable{
         }
 
 
-        //closing the connection
+        //Closing the connection
         try {
             conn.close();
             System.out.println("Connection Closed.");
