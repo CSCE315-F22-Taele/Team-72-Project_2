@@ -21,12 +21,33 @@ price_modifiers = {"Steak": 8.29, "Ground Beef": 8.19, "Chicken": 7.29, "Vegetab
 #Attributes of Customer Order = [id, [items], total]
 #auth_users is definitely predefined and static
 
-def make_order(id, pSauce=80, pRice=80, pBean=75, pCheese=90, pTopping=99, pSide=40, pDrink=70):
-  lst = [id]
+def make_order(id,date, pSauce=80, pRice=80, pBean=75, pCheese=90, pTopping=99, pSide=40, pDrink=70):
+  lst = [id,date]
   price = 0
 
   #choose a random product
   lst.append(products[randint(0,3)]) 
+
+  #add a random side iff randint(1,100) <= pSide
+  if (randint(1,100) <= pSide):
+    choice = randint(0,len(sides)-1)
+    lst.append(sides[choice]) 
+
+    price += price_modifiers[sides[choice]]
+  else:
+    lst.append("None") 
+
+  #add a random drink iff randint(1,100) <= pDrink
+  if (randint(1,100) <= pDrink):
+    choice = randint(0,len(drinks)-1)
+    lst.append(drinks[choice]) 
+
+    price += price_modifiers[drinks[choice]]
+  else:
+    lst.append("None") 
+
+
+  
 
   #choose a random protein
   choice = randint(0,3)
@@ -67,24 +88,9 @@ def make_order(id, pSauce=80, pRice=80, pBean=75, pCheese=90, pTopping=99, pSide
     for i in range(randint(low,high)):
       lst.append(toppings[i]) 
 
-
-  #add a random side iff randint(1,100) <= pSide
-  if (randint(1,100) <= pSide):
-    choice = randint(0,len(sides)-1)
-    lst.append(sides[choice]) 
-
-    price += price_modifiers[sides[choice]]
-
-  #add a random drink iff randint(1,100) <= pDrink
-  if (randint(1,100) <= pDrink):
-    choice = randint(0,len(drinks)-1)
-    lst.append(drinks[choice]) 
-
-    price += price_modifiers[drinks[choice]]
   
-  
-  #append price
-  lst.append(round(price,2))
+  #insert price
+  lst.insert(2,round(price,2))
 
 
   return lst
@@ -112,10 +118,12 @@ def lstToStr(lst):
 
 def main(argv):
 
+  date = "2021-10-20"
+
   if len(argv) == 1:
 
     for id in range(1,101):
-      orderlst = make_order(id)
+      orderlst = make_order(id,date)
       print(lstToStr(orderlst))
     return 
 
@@ -123,9 +131,11 @@ def main(argv):
   with open(argv[1], "a") as file:
     overall_price = 0
 
+    
+
     for id in range(1,int(argv[2])+1):
-      orderlst = make_order(id)
-      overall_price += orderlst[-1]
+      orderlst = make_order(id,date)
+      overall_price += orderlst[2]
       file.write(lstToStr(orderlst))
     
     print(f"Total Revenue: {round(overall_price,2)}")
