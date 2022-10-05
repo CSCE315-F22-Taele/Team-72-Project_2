@@ -66,6 +66,7 @@ public class FillDataTable{
         String table_name;
         String path_name;
 
+        //Determines if table_name and file_name should use hard coded values or if they are specified in terminal
         if (args.length == 0){
             table_name = "test";
             path_name = "cool.csv";
@@ -86,7 +87,7 @@ public class FillDataTable{
         try{
             //Connecting to the database
             conn = DriverManager.getConnection(dbConnectionString, user, pswd);
-            System.out.println("Opened database successfully");
+            System.out.println("Opened database successfully.");
 
             //Parsing a CSV file into Scanner class constructor & set delimiter pattern
             Scanner sc = new Scanner(new File(path_name));  
