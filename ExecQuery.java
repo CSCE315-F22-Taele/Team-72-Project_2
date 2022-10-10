@@ -6,6 +6,23 @@ import java.io.File;
 public class ExecQuery{
 
     private Connection conn;
+    
+    public ExecQuery(){
+        conn = null;
+        String dbName = "csce331_906_72";
+        String dbConnectionString = "jdbc:postgresql://csce-315-db.engr.tamu.edu/" + dbName;
+
+        try{
+            conn = DriverManager.getConnection(dbConnectionString, "csce331_906_krueger", "730001845");
+        }catch(Exception e){
+            e.printStackTrace();
+            System.err.println(e.getClass().getName()+": "+e.getMessage());
+            System.exit(1);
+        }
+        
+        System.out.println("Opened database successfully");
+
+    }
 
     public ExecQuery(String user, String pswd){
         conn = null;
