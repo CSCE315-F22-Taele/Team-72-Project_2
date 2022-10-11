@@ -7,15 +7,15 @@ public class ExecQuery{
 
     private Connection conn;
 
-    public ExecQuery(String user, String pswd){
+    public ExecQuery(String lastname, String uin){
         conn = null;
         String dbName = "csce331_906_72";
         String dbConnectionString = "jdbc:postgresql://csce-315-db.engr.tamu.edu/" + dbName;
 
         try{
-            conn = DriverManager.getConnection(dbConnectionString, user, pswd);
+            conn = DriverManager.getConnection(dbConnectionString, "csce331_906_"+lastname, uin);
         }catch(Exception e){
-            e.printStackTrace();
+            //e.printStackTrace();
             System.err.println(e.getClass().getName()+": "+e.getMessage());
             System.exit(1);
         }
@@ -50,6 +50,7 @@ public class ExecQuery{
                 //e.printStackTrace();
                 System.err.println(e.getClass().getName()+": "+e.getMessage());
                 System.out.println("Tried Executing: "+ query);
+                close();
             }
             return "";
         }  
@@ -61,9 +62,11 @@ public class ExecQuery{
             conn.close();
             System.out.println("Connection Closed.");
         } catch(Exception e) {
+            System.err.println(e.getClass().getName()+": "+e.getMessage());
             System.out.println("Connection NOT Closed.");
         }
     }
+
 
     /*public double add(String ingredient){
 
@@ -78,22 +81,28 @@ public class ExecQuery{
     }*/
 
     public double getItemPrice(String ingredient) throws Exception{
-       String price =  run("SELECT customer_price FROM item WHERE name=" + ingredient);
+       String price = run("SELECT customer_price FROM item WHERE name = '" + ingredient + "'");
        if(price==""){
-        throw new Exception("Item Not Found");
+            throw new Exception("Item Not Found");
        }
        double res = Double.parseDouble(price);
        return res;
     }
 
     public static void main(String[] args) throws Exception{
-        ExecQuery ex = new ExecQuery("csce331_906_bass", "330001828");
+        ExecQuery ex = new ExecQuery("krueger", "730001845");
         double uno = ex.getItemPrice("Steak");
         double dos = ex.getItemPrice("Ground Beef");
         double tres = ex.getItemPrice("Bowls");
-        double cuatro = ex.getItemPrice("spaghetti");
+        try{
+            double cuatro = ex.getItemPrice("spaghetti");
+        }catch (Exception e){
+            System.out.println("No spaghetti...");
+        }
+      
+        System.out.println((uno/2)*2 + " " + (dos/2)*2 + " " + (tres/2)*2);
 
-        System.out.println(uno + " " + dos + " " + tres + " " + cuatro);
+        ex.close();
     }
 
 
