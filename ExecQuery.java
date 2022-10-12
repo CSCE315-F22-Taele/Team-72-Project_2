@@ -6,33 +6,16 @@ import java.io.File;
 public class ExecQuery{
 
     private Connection conn;
-    
-    public ExecQuery(){
+
+    public ExecQuery(String lastname, String uin){
         conn = null;
         String dbName = "csce331_906_72";
         String dbConnectionString = "jdbc:postgresql://csce-315-db.engr.tamu.edu/" + dbName;
 
         try{
-            conn = DriverManager.getConnection(dbConnectionString, "csce331_906_krueger", "730001845");
+            conn = DriverManager.getConnection(dbConnectionString, "csce331_906_"+lastname, uin);
         }catch(Exception e){
-            e.printStackTrace();
-            System.err.println(e.getClass().getName()+": "+e.getMessage());
-            System.exit(1);
-        }
-        
-        System.out.println("Opened database successfully");
-
-    }
-
-    public ExecQuery(String user, String pswd){
-        conn = null;
-        String dbName = "csce331_906_72";
-        String dbConnectionString = "jdbc:postgresql://csce-315-db.engr.tamu.edu/" + dbName;
-
-        try{
-            conn = DriverManager.getConnection(dbConnectionString, user, pswd);
-        }catch(Exception e){
-            e.printStackTrace();
+            //e.printStackTrace();
             System.err.println(e.getClass().getName()+": "+e.getMessage());
             System.exit(1);
         }
@@ -67,6 +50,7 @@ public class ExecQuery{
                 //e.printStackTrace();
                 System.err.println(e.getClass().getName()+": "+e.getMessage());
                 System.out.println("Tried Executing: "+ query);
+                close();
             }
             return "";
         }  
@@ -78,8 +62,47 @@ public class ExecQuery{
             conn.close();
             System.out.println("Connection Closed.");
         } catch(Exception e) {
+            System.err.println(e.getClass().getName()+": "+e.getMessage());
             System.out.println("Connection NOT Closed.");
         }
+    }
+
+
+    /*public double add(String ingredient){
+
+    }
+
+    public boolean verifyManager(String user, String pass){
+
+    }
+
+    public boolean verifyServer(String user, String pass){
+
+    }*/
+
+    public double getItemPrice(String ingredient) throws Exception{
+       String price = run("SELECT customer_price FROM item WHERE name = '" + ingredient + "'");
+       if(price==""){
+            throw new Exception("Item Not Found");
+       }
+       double res = Double.parseDouble(price);
+       return res;
+    }
+
+    public static void main(String[] args) throws Exception{
+        ExecQuery ex = new ExecQuery("krueger", "730001845");
+        double uno = ex.getItemPrice("Steak");
+        double dos = ex.getItemPrice("Ground Beef");
+        double tres = ex.getItemPrice("Bowls");
+        try{
+            double cuatro = ex.getItemPrice("spaghetti");
+        }catch (Exception e){
+            System.out.println("No spaghetti...");
+        }
+      
+        System.out.println((uno/2)*2 + " " + (dos/2)*2 + " " + (tres/2)*2);
+
+        ex.close();
     }
 
 
