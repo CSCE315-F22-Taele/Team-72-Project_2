@@ -51,7 +51,6 @@ public class ExecQuery{
                     res += result.getString(i);    
                     //System.out.println("Here: "+(String[]) (a.getArray()));    
                 }
-
             }
             
             return res;
@@ -102,27 +101,27 @@ public class ExecQuery{
         Item items[] = new Item[row_amt];
 
         while (i < row_amt){
-            String res = run("SELECT name, type, customer_price FROM item OFFSET "+i+" LIMIT 1");
+            String res = run("SELECT id, name, customer_price, restock_price, customer_amount, restock_amount, order_unit, inventory, type FROM item OFFSET "+i+" LIMIT 1");
 
 
             //Tokenize
-            String[] attributes = new String[3];
+            String[] attrib = new String[9];
             int k = 0;
             int prev = 0;
             for( int curr = 0; curr < res.length(); curr++){
                 if (Character.compare(res.charAt(curr),'|') == 0){
-                    attributes[k] = res.substring(prev, curr);
+                    attrib[k] = res.substring(prev, curr);
                     k++;
                     prev = curr+1;
                 }
             }
-            attributes[k] = res.substring(prev,res.length());
+            attrib[k] = res.substring(prev,res.length());
 
-            
-
+        
             //String type = run("SELECT type FROM item OFFSET "+i+" LIMIT 1");
             //String price_str = run("SELECT customer_price FROM item OFFSET "+i+" LIMIT 1");
-            Item item = new Item(attributes[0], attributes[1], Double.parseDouble(attributes[2]));
+            Item item = new Item(Integer.parseInt(attrib[0]), attrib[1], Double.parseDouble(attrib[2]),
+            Double.parseDouble(attrib[3]), Double.parseDouble(attrib[4]), Double.parseDouble(attrib[5]), attrib[6], Integer.parseInt(attrib[7]), attrib[8]);
             items[i] = item;
 
             i++;
@@ -130,7 +129,6 @@ public class ExecQuery{
 
         return items;
     }
-
 
     /**
      * Returns the price of an Item
@@ -147,16 +145,31 @@ public class ExecQuery{
        return res;
     }
 
+    /**
+     * Returns the attribute of a particular item
+     * @param ingredient string of item name
+     * @param column string of the column name in the datatable
+     * @return  price of item as a double
+     * @throws Exception
+     */
+    public String getItemColumn(String ingredient, String column) throws Exception{
+        if (column.equals("name")){
+            return ingredient;
+        }
+        String res = run("SELECT customer_price FROM "+ column +" WHERE name = '" + ingredient + "'");
+        if(res==""){
+             throw new Exception("Item/Column Not Found");
+        }
+        return res;
+     }
+
     public static void main(String[] args) throws Exception{
-
-
         ExecQuery ex = new ExecQuery("krueger", "730001845");
-        
+      
         Item test[] = ex.getItems();
 
-
         for (Item i: test){
-            System.out.println(i.getName() + " " + i.getType() + " " + i.getPrice());
+            System.out.println(i);
         }
 
         /* 
