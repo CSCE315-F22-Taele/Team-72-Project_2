@@ -1,14 +1,19 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.security.cert.LDAPCertStoreParameters;
+import java.text.Bidi;
+import java.util.ArrayList;
+
 import javax.swing.*;
 
 public class MainFrame extends JFrame {
     final private Font titleFont = new Font("Helvetica", Font.BOLD, 18);
+    final private Font subtitleFont = new Font("Helvetica", Font.BOLD, 16);
     final private Font paragraphFont = new Font("Helvetica", Font.PLAIN, 14);
 
     private double total = 0;
     JPanel orderPanel;  // panel that configures order, changes based on server/manager
-
+    
     public void initialize() {
         JPanel mainWindow = new JPanel();
         
@@ -30,6 +35,8 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 orderPanel.removeAll();
+                orderPanel.revalidate();
+                orderPanel.repaint();
                 serverLayout();
                 setVisible(true);
             }
@@ -42,6 +49,8 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 orderPanel.removeAll();
+                orderPanel.revalidate();
+                orderPanel.repaint();
                 managerLayout();
                 setVisible(true);
             }
@@ -85,9 +94,7 @@ public class MainFrame extends JFrame {
         orderConfirm.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.black));
 
         // initialize order confirm pane elements
-        JLabel totalLabel = new JLabel("Total:");
-        totalLabel.setFont(titleFont);
-        JLabel orderTotalLabel = new JLabel(String.format("$%.2f", total));
+        JLabel orderTotalLabel = new JLabel(String.format("Total: $%.2f", total));
         orderTotalLabel.setFont(titleFont);
         JButton confirmButton = new JButton("Confirm");
         confirmButton.setFont(titleFont);
@@ -97,8 +104,7 @@ public class MainFrame extends JFrame {
         // TODO: add functionality for buttons
 
         // add confirm pane elements
-        orderConfirm.setLayout(new GridLayout(1, 4, 2, 2));
-        orderConfirm.add(totalLabel);
+        orderConfirm.setLayout(new GridLayout(1, 3, 2, 2));
         orderConfirm.add(orderTotalLabel);
         orderConfirm.add(confirmButton);
         orderConfirm.add(cancelButton);
@@ -133,20 +139,140 @@ public class MainFrame extends JFrame {
 
     // reconfigures main panel for customer orders
     void serverLayout() {
-        orderPanel.setLayout(new BorderLayout());
-        JLabel test = new JLabel("Server");
-        orderPanel.add(test, BorderLayout.NORTH);
+        int numSmallSections = 3;
+        int numBigSections = 3;
+        int numButtonCols = 5;
+        orderPanel.setLayout(new GridLayout(numSmallSections + numBigSections, 1, 0, 5));
+
+        for (int i = 0; i < numSmallSections + numBigSections; i++) {
+            JPanel selectionPanel = new JPanel();
+            JPanel selectionButtons = new JPanel();
+
+            selectionButtons.setOpaque(false);
+            if (i < numSmallSections) {
+                selectionButtons.setLayout(new GridLayout(1, numButtonCols, 4, 4));
+                for (int j = 0; j < numButtonCols; j++) {
+                    JButton btn = new JButton();
+                    btn.setText("Button " + j);
+                    selectionButtons.add(btn);
+                }
+            }
+            else {
+                selectionButtons.setLayout(new GridLayout(2, numButtonCols, 4, 4));
+                for (int j = 0; j < 2 * numButtonCols; j++) {
+                    JButton btn = new JButton();
+                    btn.setText("Button " + j);
+                    selectionButtons.add(btn);
+                }
+            }
+
+            JLabel categoryName = new JLabel("Small Section " + i);
+            categoryName.setForeground(Color.white);
+            categoryName.setFont(subtitleFont);
+
+            selectionPanel.setLayout(new BorderLayout());
+            selectionPanel.setOpaque(false);
+            selectionPanel.add(categoryName, BorderLayout.NORTH);
+            selectionPanel.add(selectionButtons, BorderLayout.CENTER);
+
+            orderPanel.add(selectionPanel, BorderLayout.CENTER);
+        }
     }
 
     // reconfigures main panel for restock orders
     void managerLayout() {
         orderPanel.setLayout(new BorderLayout());
-        JLabel test = new JLabel("Manager");
-        orderPanel.add(test, BorderLayout.NORTH);
+
+        JPanel restockCategories = new JPanel();
+        restockCategories.setLayout(new BorderLayout());
+
+        ArrayList<String> categories = new ArrayList<String>();
+        categories.add("Bases");
+        categories.add("Protein");
+        categories.add("Rice/Beans");
+        categories.add("Toppings/Sauces");
+        categories.add("Sides");
+        categories.add("Other");
+
+        JPanel restockButtons = new JPanel();
+        restockButtons.setLayout(new GridLayout(1, categories.size(), 2, 2));
+        restockButtons.setOpaque(false);
+
+        for (String cat: categories) {
+            JButton btn = new JButton(cat);
+            btn.setFont(subtitleFont);
+            restockButtons.add(btn);
+        }
+        // restockCategories.add(restockButtons, BorderLayout.WEST);
+
+        JPanel spreadsheet = new JPanel();
+        spreadsheet.setLayout(new BorderLayout());
+        spreadsheet.setOpaque(false);
+
+        JPanel spreadsheetTitle = new JPanel();
+        spreadsheetTitle.setLayout(new GridLayout(1, 7, 2, 2));
+        spreadsheetTitle.setOpaque(false);
+
+        JLabel ingredientName = new JLabel("Ingredient Name", SwingConstants.CENTER);
+        ingredientName.setFont(subtitleFont);
+        JLabel inventory = new JLabel("Current Inv.", SwingConstants.CENTER);
+        inventory.setFont(subtitleFont);
+        JLabel pricePerUnit = new JLabel("Price Per Unit", SwingConstants.CENTER);
+        pricePerUnit.setFont(subtitleFont);
+        JLabel unit = new JLabel("Unit", SwingConstants.CENTER);
+        unit.setFont(subtitleFont);
+        JLabel addedInventory = new JLabel("Added Inv.", SwingConstants.CENTER);
+        addedInventory.setFont(subtitleFont);
+        JLabel addedTotal = new JLabel("Added Total", SwingConstants.CENTER);
+        addedTotal.setFont(subtitleFont);
+        JLabel confirm = new JLabel("Confirm", SwingConstants.CENTER);
+        confirm.setFont(subtitleFont);
+
+        spreadsheetTitle.add(ingredientName);
+        spreadsheetTitle.add(inventory);
+        spreadsheetTitle.add(pricePerUnit);
+        spreadsheetTitle.add(unit);
+        spreadsheetTitle.add(addedInventory);
+        spreadsheetTitle.add(addedTotal);
+        spreadsheetTitle.add(confirm);
+
+        JPanel spreadsheetCellsContainer = new JPanel();
+        spreadsheetCellsContainer.setLayout(new BorderLayout());
+        spreadsheetCellsContainer.setOpaque(false);
+        
+        JPanel spreadsheetCells = new JPanel();
+        spreadsheetCells.setLayout(new GridLayout(3, 7, 2, 2));
+        spreadsheetCells.setOpaque(false);
+        for (int i = 0; i < 3; i++) {
+            JLabel ingName = new JLabel("Ingredient " + i);
+            JLabel inv = new JLabel("XXX");
+            JLabel ppu = new JLabel("$X.XX");
+            JLabel u = new JLabel("u");
+            JTextField addInv = new JTextField();
+            JLabel addTot = new JLabel("$XX.XX");
+            JButton confBtn = new JButton("Add to Order");
+
+            spreadsheetCells.add(ingName);
+            spreadsheetCells.add(inv);
+            spreadsheetCells.add(ppu);
+            spreadsheetCells.add(u);
+            spreadsheetCells.add(addInv);
+            spreadsheetCells.add(addTot);
+            spreadsheetCells.add(confBtn);
+        }
+        spreadsheetCellsContainer.add(spreadsheetCells, BorderLayout.NORTH);
+
+        spreadsheet.add(spreadsheetTitle, BorderLayout.NORTH);
+        spreadsheet.add(spreadsheetCellsContainer, BorderLayout.CENTER);
+
+        orderPanel.add(restockButtons, BorderLayout.NORTH);
+        orderPanel.add(spreadsheet, BorderLayout.CENTER);
     }
 
     public static void main(String[] args) {
         MainFrame myFrame = new MainFrame();
         myFrame.initialize();
+        myFrame.managerLayout();
+        myFrame.setVisible(true);
     }
 }
