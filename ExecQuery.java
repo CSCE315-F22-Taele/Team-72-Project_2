@@ -1,7 +1,4 @@
 import java.sql.*;
-import java.util.Scanner;  
-import java.io.File;
-
 
 public class ExecQuery{
 
@@ -37,10 +34,12 @@ public class ExecQuery{
             while (result.next()) {
                 for (int i = 1; i <= columnsNumber; i++) {
                     if (i > 1){
-                        res += "  ";
+                        res += "|";
                     }
-                    res += result.getString(i);        
+                    res += result.getString(i);    
+                    //System.out.println("Here: "+(String[]) (a.getArray()));    
                 }
+
             }
             
             return res;
@@ -78,7 +77,43 @@ public class ExecQuery{
 
     public boolean verifyServer(String user, String pass){
 
-    }*/
+    }
+    */
+
+    public Item[] getItems(){
+        int i = 0;
+        int row_amt = Integer.parseInt(run("SELECT COUNT(name) FROM item"));
+        Item items[] = new Item[row_amt];
+
+        while (i < row_amt){
+            String res = run("SELECT name, type, customer_price FROM item OFFSET "+i+" LIMIT 1");
+
+
+            //Tokenize
+            String[] attributes = new String[3];
+            int k = 0;
+            int prev = 0;
+            for( int curr = 0; curr < res.length(); curr++){
+                if (Character.compare(res.charAt(curr),'|') == 0){
+                    attributes[k] = res.substring(prev, curr);
+                    k++;
+                    prev = curr+1;
+                }
+            }
+            attributes[k] = res.substring(prev,res.length());
+
+            
+
+            //String type = run("SELECT type FROM item OFFSET "+i+" LIMIT 1");
+            //String price_str = run("SELECT customer_price FROM item OFFSET "+i+" LIMIT 1");
+            Item item = new Item(attributes[0], attributes[1], Double.parseDouble(attributes[2]));
+            items[i] = item;
+
+            i++;
+        }
+
+        return items;
+    }
 
     public double getItemPrice(String ingredient) throws Exception{
        String price = run("SELECT customer_price FROM item WHERE name = '" + ingredient + "'");
@@ -90,7 +125,18 @@ public class ExecQuery{
     }
 
     public static void main(String[] args) throws Exception{
+
+
         ExecQuery ex = new ExecQuery("krueger", "730001845");
+        
+        Item test[] = ex.getItems();
+
+
+        for (Item i: test){
+            System.out.println(i.getName() + " " + i.getType() + " " + i.getPrice());
+        }
+
+        /* 
         double uno = ex.getItemPrice("Steak");
         double dos = ex.getItemPrice("Ground Beef");
         double tres = ex.getItemPrice("Bowls");
@@ -101,6 +147,7 @@ public class ExecQuery{
         }
       
         System.out.println((uno/2)*2 + " " + (dos/2)*2 + " " + (tres/2)*2);
+        */
 
         ex.close();
     }
