@@ -1,9 +1,17 @@
 import java.sql.*;
 
+/** ExecQuery Class that executes sql queries on a database
+ * @author Conrad Krueger
+ */
 public class ExecQuery{
 
     private Connection conn;
 
+
+    /** Constructor to establish connection with database
+     * @param lastname string that accepts last name for login
+     * @param uin string that contains users UIN
+     */
     public ExecQuery(String lastname, String uin){
         conn = null;
         String dbName = "csce331_906_72";
@@ -20,7 +28,11 @@ public class ExecQuery{
         System.out.println("Opened database successfully");
     }
 
-
+    /**
+     * Executes an sql query
+     * @param query string containing the sql query
+     * @return string containing results from query, empty string if no results outputted
+     */
     public String run(String query){
         try{
             Statement stmt = conn.createStatement();
@@ -55,7 +67,8 @@ public class ExecQuery{
         }  
     }
 
-
+    /** Closes the connection with the database
+     */
     public void close(){
         try {
             conn.close();
@@ -80,6 +93,9 @@ public class ExecQuery{
     }
     */
 
+    /** Gets name, type, and customer price of every item in the Item datatable
+     * @return array of Items
+     */
     public Item[] getItems(){
         int i = 0;
         int row_amt = Integer.parseInt(run("SELECT COUNT(name) FROM item"));
@@ -115,6 +131,13 @@ public class ExecQuery{
         return items;
     }
 
+
+    /**
+     * Returns the price of an Item
+     * @param ingredient string of item name
+     * @return  price of item as a double
+     * @throws Exception
+     */
     public double getItemPrice(String ingredient) throws Exception{
        String price = run("SELECT customer_price FROM item WHERE name = '" + ingredient + "'");
        if(price==""){
