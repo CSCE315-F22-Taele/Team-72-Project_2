@@ -1,11 +1,16 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.security.cert.LDAPCertStoreParameters;
-import java.text.Bidi;
 import java.util.ArrayList;
 
 import javax.swing.*;
 
+/**
+ * Class for the GUI of the Point-of-Scale system.
+ * <p>
+ * This class extends JFrame and incorporates new methods for the purpose of the POS system.
+ * 
+ * @author Carson Duffy
+ */
 public class MainFrame extends JFrame {
     final private Font titleFont = new Font("Helvetica", Font.BOLD, 18);
     final private Font subtitleFont = new Font("Helvetica", Font.BOLD, 16);
@@ -13,7 +18,16 @@ public class MainFrame extends JFrame {
 
     private double total = 0;
     JPanel orderPanel;  // panel that configures order, changes based on server/manager
-    
+
+
+    /**
+     * Configures and displays the main layout for the Point-of-Sale GUI interface.
+     * <p>
+     * This function runs at the start of the main function for the MainFrame class.
+     * It adds all of the panels, text, and buttons necessary for the GUI's operation, 
+     * and it also configures the main button behavior for the buttons that are included
+     * in both the server and the manager pages of the GUI.
+     */
     public void initialize() {
         JPanel mainWindow = new JPanel();
         
@@ -136,8 +150,14 @@ public class MainFrame extends JFrame {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
     }
+    
 
-    // reconfigures main panel for customer orders
+    /**
+     * Configures the functionality and layout for the main panel for the server view of the GUI.
+     * <p>
+     * This function is triggered by the "server" button included in the navigation panel at the 
+     * top of the GUI. The panel is automatically cleared and re-displayed outside of this function.
+     */
     void serverLayout() {
         int numSmallSections = 3;
         int numBigSections = 3;
@@ -179,7 +199,13 @@ public class MainFrame extends JFrame {
         }
     }
 
-    // reconfigures main panel for restock orders
+
+    /**
+     * Configures the functionality and layout for the main panel for the manager view of the GUI.
+     * <p>
+     * This function is triggered by the "manager" button included in the navigation panel at the 
+     * top of the GUI. The panel is automatically cleared and re-displayed outside of this function.
+     */
     void managerLayout() {
         orderPanel.setLayout(new BorderLayout());
 
