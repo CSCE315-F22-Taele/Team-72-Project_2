@@ -127,7 +127,9 @@ public class ExecQuery{
         if(employee.getRole() == "manager"){
             Set<Item> keys = LHM.keySet();
             for(Item key : keys){
+                double oldInv = key.getInventory();
                 run("UPDATE item SET inventory=inventory+" + LHM.get(key) + " where name='" + key.getName() + "'");
+                key.setInventory(oldInv+LHM.get(key));
             }
         }
     }
@@ -178,7 +180,7 @@ public class ExecQuery{
         int containerID = 0;
 
 
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");  
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
         Date date = new Date();  
         String time_of_order = formatter.format(date).toString();
         
