@@ -51,6 +51,9 @@ public class Item{
     public String getType(){
         return type;
     }
+    public void setID(int _id){
+        id = _id;
+    }
     public void setInventory(double amount){
         inventory = amount;
     }
