@@ -4,7 +4,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.List;
 
+import javax.imageio.ImageReader;
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
 
 /**
@@ -27,6 +30,8 @@ public class MainFrame extends JFrame {
     private static LinkedHashMap<Item, Integer> restockOrderItems = new LinkedHashMap<>();
     private static Employee currentEmployee;
     private static ExecQuery eq;
+    private String restockCategoryName;
+    private static List<Item> itemsList;
 
     private static Map<String, List<Item>> itemTypeMap;
     private static LinkedHashMap<String, List<String>> typeGroupMap = new LinkedHashMap<>();
@@ -146,10 +151,11 @@ public class MainFrame extends JFrame {
                     listCustomerOrderItems();
                 }
                 else {
-                    // completeRestockOrder(restockOrderItems, employee)
+                    eq.confirmRestockOrder(restockOrderItems, currentEmployee);
                     restockTotal = 0;
                     restockOrderItems.clear();
                     listRestockOrderItems();
+                    displayRestockTable(restockCategoryName);
                 }
             }
         });
@@ -337,13 +343,25 @@ public class MainFrame extends JFrame {
         spreadsheetTitle.setOpaque(false);
 
         // add column titles to spreadsheet table
-        String[] tableLabels = {"Ingredient Name", "Current Inv.", "Price Per Unit", "Unit", "Added Inv.", "Added Total", "Confirm"};
+        String[] tableLabels = {"Name", "Price", "Change Price", "Current Inv.", "PPU", "Unit", "Added Inv.", "Added Total", "Confirm"};
         for (String tl: tableLabels) {
             JLabel tableLabel = new JLabel(tl, SwingConstants.CENTER);
             tableLabel.setFont(subtitleFont);
             tableLabel.setForeground(Color.white);
             spreadsheetTitle.add(tableLabel);
         }
+
+        JButton addItemBtn = new JButton("Add Item");
+        addItemBtn.setFont(paragraphFont);
+        spreadsheet.add(addItemBtn, BorderLayout.SOUTH);
+
+        // TODO: add button functionality
+        addItemBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addItemFromGUI();
+            }
+        });
 
         // configure layout for table cells container
         JPanel spreadsheetCellsContainer = new JPanel();
@@ -362,8 +380,8 @@ public class MainFrame extends JFrame {
         orderPanel.add(spreadsheet, BorderLayout.CENTER);
 
         // set spreadsheet to category and redisplay order summary
-        String firstCategory = typeGroupMap.keySet().toArray()[0].toString();
-        displayRestockTable(firstCategory);
+        restockCategoryName = typeGroupMap.keySet().toArray()[0].toString();
+        displayRestockTable(restockCategoryName);
         listRestockOrderItems();
     }
 
@@ -379,6 +397,8 @@ public class MainFrame extends JFrame {
      * @param categoryName specifies the category whose items are displayed in the table.
      */
     void displayRestockTable(String categoryName) {
+        restockCategoryName = categoryName;
+
         // reconfigure spreadsheet panel
         spreadsheetCells.removeAll();
         spreadsheetCells.revalidate();
@@ -392,20 +412,26 @@ public class MainFrame extends JFrame {
         }
 
         // initialize and configure spreadsheet layout
-        spreadsheetCells.setLayout(new GridLayout(sectionItems.size(), 7, 2, 2));
+        spreadsheetCells.setLayout(new GridLayout(sectionItems.size(), 9, 2, 2));
 
         // add each item's properties to the spreadsheet table
         for (Item it: sectionItems) {
             JLabel ingName = new JLabel(it.getName(), SwingConstants.CENTER);
+            JTextField cPrice = new JTextField();
+            JButton chgBtn = new JButton("Change");
             JLabel inv = new JLabel(Double.toString(it.getInventory()), SwingConstants.CENTER);
             JLabel ppu = new JLabel(String.format("$%.2f", it.getRestockPrice()), SwingConstants.CENTER);
             JLabel u = new JLabel(it.getOrderUnit(), SwingConstants.CENTER);
             JTextField addInv = new JTextField();
             JLabel addTot = new JLabel("", SwingConstants.CENTER);
-            JButton confBtn = new JButton("Add to Order");
+            JButton confBtn = new JButton("Add");
 
+            // format each element
             ingName.setFont(paragraphFont);
             ingName.setForeground(Color.white);
+            cPrice.setFont(paragraphFont);
+            cPrice.setText(String.format("%.2f", it.getCustomerPrice()));
+            chgBtn.setFont(paragraphFont);
             inv.setFont(paragraphFont);
             inv.setForeground(Color.white);
             ppu.setFont(paragraphFont);
@@ -419,6 +445,8 @@ public class MainFrame extends JFrame {
 
             // add each element to the row
             spreadsheetCells.add(ingName);
+            spreadsheetCells.add(cPrice);
+            spreadsheetCells.add(chgBtn);
             spreadsheetCells.add(inv);
             spreadsheetCells.add(ppu);
             spreadsheetCells.add(u);
@@ -426,7 +454,23 @@ public class MainFrame extends JFrame {
             spreadsheetCells.add(addTot);
             spreadsheetCells.add(confBtn);
 
-            // configure button functionality
+            // add changePrice functionality
+            chgBtn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        double price = Double.parseDouble(cPrice.getText());
+                        it.setCustomerPrice(price);
+                        eq.changeItemPrice(it, price);
+                        displayRestockTable(categoryName);
+                    }
+                    catch (NumberFormatException err) {
+                        System.out.println("ERROR: Please enter a number");
+                    }
+                }
+            });
+
+            // configure confirm button functionality
             confBtn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -574,12 +618,127 @@ public class MainFrame extends JFrame {
         orderTotalLabel.setText(String.format("Total: $%.2f", restockTotal));
     }
 
+    void addItemFromGUI() {
+        JFrame newItemWindow = new JFrame("Add Item");
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JPanel attGrid = new JPanel();
+        attGrid.setLayout(new GridLayout(8, 2, 4, 4));
+
+        List<String> attributes = Arrays.asList("Name", "Customer Price", "Restock Price", 
+                                                        "Customer Amount", "Restock Amount", "Order Unit", 
+                                                        "Inventory", "Type");
+
+        JLabel nameLab = new JLabel("Name");
+        nameLab.setFont(paragraphFont);
+        JTextField nameField = new JTextField();
+        nameField.setFont(paragraphFont);
+
+        JLabel cpLab = new JLabel("Customer Price");
+        cpLab.setFont(paragraphFont);
+        JTextField cpField = new JTextField();
+        cpField.setFont(paragraphFont);
+
+        JLabel rpLab = new JLabel("Restock Price");
+        rpLab.setFont(paragraphFont);
+        JTextField rpField = new JTextField();
+        rpField.setFont(paragraphFont);
+
+        JLabel caLab = new JLabel("Customer Amount");
+        caLab.setFont(paragraphFont);
+        JTextField caField = new JTextField();
+        caField.setFont(paragraphFont);
+
+        JLabel raLab = new JLabel("Restock Amount");
+        raLab.setFont(paragraphFont);
+        JTextField raField = new JTextField();
+        raField.setFont(paragraphFont);
+
+        JLabel unitLab = new JLabel("Unit of Measure");
+        unitLab.setFont(paragraphFont);
+        JTextField unitField = new JTextField();
+        unitField.setFont(paragraphFont);
+
+        JLabel invLab = new JLabel("Inventory Amount");
+        invLab.setFont(paragraphFont);
+        JTextField invField = new JTextField();
+        invField.setFont(paragraphFont);
+
+        JLabel typeLab = new JLabel("Item Type");
+        typeLab.setFont(paragraphFont);
+        JTextField typeField = new JTextField();
+        typeField.setFont(paragraphFont);
+
+        attGrid.add(nameLab);
+        attGrid.add(nameField);
+        attGrid.add(cpLab);
+        attGrid.add(cpField);
+        attGrid.add(rpLab);
+        attGrid.add(rpField);
+        attGrid.add(caLab);
+        attGrid.add(caField);
+        attGrid.add(raLab);
+        attGrid.add(raField);
+        attGrid.add(unitLab);
+        attGrid.add(unitField);
+        attGrid.add(invLab);
+        attGrid.add(invField);
+        attGrid.add(typeLab);
+        attGrid.add(typeField);
+
+        JPanel buttonWrapper = new JPanel();
+        buttonWrapper.setLayout(new BorderLayout());
+
+        JButton confBtn = new JButton();
+        confBtn.setText("Add Item");
+        confBtn.setFont(paragraphFont);
+
+        confBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String name = nameField.getText();
+                double customerPrice = Double.parseDouble(cpField.getText());
+                double restockPrice = Double.parseDouble(rpField.getText());
+                double customerAmount = Double.parseDouble(caField.getText());
+                double restockAmount = Double.parseDouble(raField.getText());
+                double inventory = Double.parseDouble(invField.getText());
+                String orderUnit = unitField.getText();
+                String type = typeField.getText();
+
+                Item item = new Item(-1, name, customerPrice, restockPrice, customerAmount, 
+                                        restockAmount, orderUnit, inventory, type);
+                System.out.println();
+                eq.addItem(item);
+
+                itemsList = Arrays.asList(eq.getItems());
+
+                newItemWindow.setVisible(false);
+                newItemWindow.dispose();
+            }
+        });
+
+        buttonWrapper.add(confBtn, BorderLayout.WEST);
+
+        mainPanel.add(attGrid, BorderLayout.NORTH);
+        mainPanel.add(buttonWrapper, BorderLayout.SOUTH);
+
+        newItemWindow.add(mainPanel);
+
+        newItemWindow.setMinimumSize(new Dimension(300, 400));
+
+        newItemWindow.setTitle("Add Item");
+        // newItemWindow.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        newItemWindow.setVisible(true);
+    }
+
 
     public static void main(String[] args) {
         eq = new ExecQuery("duffy", "930006481");
 
         // collect items and group by type
-        List<Item> itemsList = Arrays.asList(eq.getItems());
+        itemsList = Arrays.asList(eq.getItems());
         itemTypeMap = itemsList.stream().collect(Collectors.groupingBy(i -> i.getType()));
 
         // add entries to hash map that groups item types into categories (represented by keys)
