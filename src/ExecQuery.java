@@ -1,4 +1,9 @@
 import java.sql.*;
+import java.util.ArrayList;
+import java.text.SimpleDateFormat;  
+import java.util.Date;  
+import java.util.Arrays;  
+
 
 /** ExecQuery Class that executes sql queries on a database
  * @author Conrad Krueger
@@ -81,16 +86,159 @@ public class ExecQuery{
 
     /*public double add(String ingredient){
 
-    }
+    }*/
 
     public boolean verifyManager(String user, String pass){
-
+        String isManager = run("SELECT role FROM employee WHERE username = '"+user+"'");
+        return verifyServer(user, pass) && isManager.equals("manager");
     }
 
     public boolean verifyServer(String user, String pass){
+        String res = run("SELECT password FROM employee WHERE username = '"+user+"'");
+        return res.equals(pass);
+    }
+
+
+    public Item getItem(String name){
+        String res = run("SELECT * FROM item WHERE name = '"+name+"'");
+        //tokenize
+
+        String[] attrib = new String[9];
+        int k = 0;
+        int prev = 0;
+        for( int curr = 0; curr < res.length(); curr++){
+            if (Character.compare(res.charAt(curr),'|') == 0){
+                attrib[k] = res.substring(prev, curr);
+                k++;
+                prev = curr+1;
+            }
+        }
+        attrib[k] = res.substring(prev,res.length());
+
+        Item item = new Item(Integer.parseInt(attrib[0]), attrib[1], Double.parseDouble(attrib[2]),
+        Double.parseDouble(attrib[3]), Double.parseDouble(attrib[4]), Double.parseDouble(attrib[5]), attrib[6], Double.parseDouble(attrib[7]), attrib[8]);
+        
+        return item;
+    }
+
+
+    /*public void confirmRestockOrder(HashMap<int,double> items){
+
+    }*/
+
+    //Decrease Inventory of item name
+    public void decrease(Item item) throws Exception{
+        //edge case Chips and Queso
+
+        double decrementAmt = Double.parseDouble(getItemColumn(item.getName(), "customer_amount"));
+        double currAmt = Double.parseDouble(getItemColumn(item.getName(), "inventory"));
+
+        currAmt -= decrementAmt;
+
+        run("UPDATE item SET inventory = "+ currAmt + " WHERE name = '" + item.getName() + "'");
+
+        if (item.getName().length() >= 5 && item.getName().substring(0,5).equals("Chips")){
+
+            decrementAmt = Double.parseDouble(getItemColumn("Tortilla Chips", "customer_amount"));
+            currAmt = Double.parseDouble(getItemColumn(item.getName(), "inventory"));
+
+            run("UPDATE item SET inventory = "+ currAmt + " WHERE name = 'Tortilla Chips'");
+
+            String sauce = item.getName().substring(10);
+            if (sauce.equals("Guac")){
+                sauce = "Guacamole";
+            }
+            decrementAmt = Double.parseDouble(getItemColumn(sauce, "customer_amount"));
+            currAmt = Double.parseDouble(getItemColumn(sauce, "inventory"));
+
+            run("UPDATE item SET inventory = "+ currAmt + " WHERE name = '" + sauce +"'");
+        }
 
     }
-    */
+
+
+    public void confirmCustomerOrder(ArrayList<Item> items, Employee employee){
+        double price = 0;
+        int co_id = Integer.parseInt(run("SELECT COUNT(id) FROM customer_orders"))+1;
+        int coi_id = Integer.parseInt(run("SELECT COUNT(id) FROM customer_order_items"))+1;
+
+        int original_coi_id = coi_id;
+
+        String mainTop = "";
+        String mainContain= "";
+        double mainPrice = 0;
+
+        int proteinID = 0;
+        int containerID = 0;
+
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");  
+        Date date = new Date();  
+        String time_of_order = formatter.format(date).toString();
+        
+
+        run("INSERT INTO customer_order_items(id, name, price) VALUES ("+original_coi_id +", null, 0)");
+        run("INSERT INTO customer_orders(id, price, time_of_order, employee_id) VALUES ("+co_id+", " + price + ", '" + time_of_order + "', " + employee.getId() + ")");
+
+
+        for (Item i: items){
+            price += i.getCustomerPrice();
+
+        
+            if (i.getType().equals("Protein")){
+                mainTop = i.getName();
+                mainPrice = i.getCustomerPrice();
+                proteinID = i.getId();
+                
+                
+            }
+            else if (i.getType().equals("Entree Base")){
+                mainContain = i.getName();
+                containerID = i.getId();
+            }
+
+            else if (i.getType().equals("Drinks")){
+                coi_id++;
+                run("INSERT INTO customer_order_items(id, name, price) VALUES ("+coi_id+", '" + i.getName() + "', " + i.getCustomerPrice()+")");
+                run("INSERT INTO co_to_coi(co_id, coi_id) VALUES ("+co_id+", " + coi_id +")");
+                run("INSERT INTO coi_to_i(coi_id, i_id) VALUES ("+coi_id+", " + i.getId() +")");
+            }
+
+            else if (i.getType().equals("Sides")){
+                coi_id++;
+                run("INSERT INTO customer_order_items(id, name, price) VALUES ("+coi_id+", '" + i.getName() + "', " + i.getCustomerPrice()+")");
+                run("INSERT INTO co_to_coi(co_id, coi_id) VALUES ("+co_id+", " + coi_id +")");
+                run("INSERT INTO coi_to_i(coi_id, i_id) VALUES ("+coi_id+", " + i.getId() +")");
+                
+            }else{
+                run("INSERT INTO coi_to_i(coi_id, i_id) VALUES ("+original_coi_id+", " + i.getId() +")");
+            }
+            
+            try{
+                decrease(i);
+            }catch(Exception e){
+                System.err.println(e.getClass().getName()+": "+e.getMessage());
+            }
+            
+
+        }
+
+        //Toppings
+
+        run("UPDATE customer_order_items SET name = '"+ mainTop + " " + mainContain + "' WHERE id = '" + original_coi_id+"'");
+        run("UPDATE customer_order_items SET price = "+ mainPrice + " WHERE id = '" + original_coi_id+"'");
+        run("UPDATE customer_orders SET price = "+ price + " WHERE id = '" + co_id+"'");
+
+
+        run("INSERT INTO co_to_coi(co_id, coi_id) VALUES ("+co_id+", " + original_coi_id +")");
+        
+        System.out.println("Protein: "+ proteinID + " Type: "+ containerID);
+        run("INSERT INTO coi_to_i(coi_id, i_id) VALUES ("+original_coi_id+", " + proteinID +")");
+        run("INSERT INTO coi_to_i(coi_id, i_id) VALUES ("+original_coi_id+", " + containerID +")");
+        
+
+    }
+    
 
     /** Gets name, type, and customer price of every item in the Item datatable
      * @return array of Items
@@ -117,11 +265,12 @@ public class ExecQuery{
             }
             attrib[k] = res.substring(prev,res.length());
 
+            //System.out.println(attrib[0] + " :id, " + attrib[1] + " : name");
         
             //String type = run("SELECT type FROM item OFFSET "+i+" LIMIT 1");
             //String price_str = run("SELECT customer_price FROM item OFFSET "+i+" LIMIT 1");
             Item item = new Item(Integer.parseInt(attrib[0]), attrib[1], Double.parseDouble(attrib[2]),
-            Double.parseDouble(attrib[3]), Double.parseDouble(attrib[4]), Double.parseDouble(attrib[5]), attrib[6], Integer.parseInt(attrib[7]), attrib[8]);
+            Double.parseDouble(attrib[3]), Double.parseDouble(attrib[4]), Double.parseDouble(attrib[5]), attrib[6], Double.parseDouble(attrib[7]), attrib[8]);
             items[i] = item;
 
             i++;
@@ -149,16 +298,17 @@ public class ExecQuery{
      * Returns the attribute of a particular item
      * @param ingredient string of item name
      * @param column string of the column name in the datatable
-     * @return  price of item as a double
+     * @return  string of resulting query
      * @throws Exception
      */
     public String getItemColumn(String ingredient, String column) throws Exception{
         if (column.equals("name")){
             return ingredient;
         }
-        String res = run("SELECT customer_price FROM "+ column +" WHERE name = '" + ingredient + "'");
+        String res = run("SELECT "+column+" FROM item WHERE name = '" + ingredient + "'");
         if(res==""){
-             throw new Exception("Item/Column Not Found");
+
+             throw new Exception("Item/Column Not Found ("+ingredient + ", " + column+")");
         }
         return res;
      }
@@ -168,9 +318,14 @@ public class ExecQuery{
       
         Item test[] = ex.getItems();
 
-        for (Item i: test){
-            System.out.println(i);
-        }
+        Employee conrad = new Employee(2,"Conrad", "Krueger", "CKrueg", "730001845", "manager");
+
+        ArrayList<Item> items = new ArrayList<>();
+        for (Item i : test)
+            items.add(i);
+
+        ex.confirmCustomerOrder(items, conrad);
+
 
         /* 
         double uno = ex.getItemPrice("Steak");
