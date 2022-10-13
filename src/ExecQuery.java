@@ -178,7 +178,7 @@ public class ExecQuery{
         int containerID = 0;
 
 
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");  
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
         Date date = new Date();  
         String time_of_order = formatter.format(date).toString();
         
