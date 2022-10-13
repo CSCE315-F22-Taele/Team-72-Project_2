@@ -100,6 +100,17 @@ public class ExecQuery{
         return res.equals(pass);
     }
 
+    public void changeItemPrice(Item item, double price){
+        run("UPDATE item SET customer_price = "+ price + " WHERE name = '" + item.getName() +"'");
+        item.setCustomerPrice(price);
+    }
+
+    public void addItem(Item item){
+        run("INSERT INTO item(id, name, customer_price, restock_price, customer_amount, restock_amount, order_unit, inventory, type) VALUES("
+        +item.getId()+", '"+item.getName()+"', "+item.getCustomerPrice()+", "+item.getRestockPrice()+", "+item.getCustomerAmount()+
+        ", "+item.getRestockAmount()+", '"+item.getOrderUnit()+"', "+item.getInventory()+", '"+item.getType()+"')");
+    }
+
     public Item getItem(String name){
         String res = run("SELECT * FROM item WHERE name = '"+name+"'");
         //tokenize
@@ -144,6 +155,7 @@ public class ExecQuery{
         currAmt -= decrementAmt;
 
         run("UPDATE item SET inventory = "+ currAmt + " WHERE name = '" + item.getName() + "'");
+        item.setInventory(currAmt);
 
         if (item.getName().length() >= 5 && item.getName().substring(0,5).equals("Chips")){
 
@@ -151,6 +163,8 @@ public class ExecQuery{
             currAmt = Double.parseDouble(getItemColumn(item.getName(), "inventory"));
 
             run("UPDATE item SET inventory = "+ currAmt + " WHERE name = 'Tortilla Chips'");
+            item.setInventory(currAmt);
+
 
             String sauce = item.getName().substring(10);
             if (sauce.equals("Guac")){
@@ -160,6 +174,7 @@ public class ExecQuery{
             currAmt = Double.parseDouble(getItemColumn(sauce, "inventory"));
 
             run("UPDATE item SET inventory = "+ currAmt + " WHERE name = '" + sauce +"'");
+            item.setInventory(currAmt);
         }
 
     }
