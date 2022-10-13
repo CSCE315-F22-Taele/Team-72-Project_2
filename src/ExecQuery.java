@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.text.SimpleDateFormat;  
 import java.util.Date;  
 import java.util.Arrays;  
+import java.util.Set;
+import java.util.LinkedHashMap;
 
 
 /** ExecQuery Class that executes sql queries on a database
@@ -122,9 +124,14 @@ public class ExecQuery{
     }
 
 
-    /*public void confirmRestockOrder(HashMap<int,double> items){
-
-    }*/
+    public void confirmRestockOrder(LinkedHashMap <Item, Integer> LHM, Employee employee){
+        if(employee.getRole() == "manager"){
+            Set<Item> keys = LHM.keySet();
+            for(Item key : keys){
+                run("UPDATE item SET inventory=inventory+" + keys.get(key) + " where name='" + key.getName() + "'");
+            }
+        }
+    }
 
     //Decrease Inventory of item name
     public void decrease(Item item) throws Exception{
