@@ -25,6 +25,8 @@ public class MainFrame extends JFrame {
     private boolean serverPage;
     private static ArrayList<Item> customerOrderItems = new ArrayList<>();
     private static LinkedHashMap<Item, Integer> restockOrderItems = new LinkedHashMap<>();
+    private static Employee currentEmployee;
+    private static ExecQuery eq;
 
     private static Map<String, List<Item>> itemTypeMap;
     private static LinkedHashMap<String, List<String>> typeGroupMap = new LinkedHashMap<>();
@@ -138,7 +140,7 @@ public class MainFrame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 // TODO: send items list to backend
                 if (serverPage) {
-                    // completeCustomerOrder(customerOrderItems, employee)
+                    eq.confirmCustomerOrder(customerOrderItems, currentEmployee);
                     customerTotal = 0;
                     customerOrderItems.clear();
                     listCustomerOrderItems();
@@ -201,6 +203,14 @@ public class MainFrame extends JFrame {
         setSize(1280, 720);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
+
+        // close database on window exit
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent windowEvent) {
+                eq.close();
+            }
+        });
     }
     
 
@@ -387,7 +397,7 @@ public class MainFrame extends JFrame {
         // add each item's properties to the spreadsheet table
         for (Item it: sectionItems) {
             JLabel ingName = new JLabel(it.getName(), SwingConstants.CENTER);
-            JLabel inv = new JLabel(Integer.toString(it.getInventory()), SwingConstants.CENTER);
+            JLabel inv = new JLabel(Double.toString(it.getInventory()), SwingConstants.CENTER);
             JLabel ppu = new JLabel(String.format("$%.2f", it.getRestockPrice()), SwingConstants.CENTER);
             JLabel u = new JLabel(it.getOrderUnit(), SwingConstants.CENTER);
             JTextField addInv = new JTextField();
@@ -511,6 +521,14 @@ public class MainFrame extends JFrame {
     }
 
 
+    /**
+     * List all of the items included in the restock order on the order summary panel.
+     * <p>
+     * This method is run every time an item is added to the order. Because of this,
+     * the order summary panel needs to be cleared and re-painted at the start of the 
+     * method in case any of the items are removed. For each item, the method lists the
+     * item name, item amount, price, and a button to remove it.
+     */
     void listRestockOrderItems() {
         // reset order summary panel and reconfigure layout
         orderSummary.removeAll();
@@ -558,7 +576,7 @@ public class MainFrame extends JFrame {
 
 
     public static void main(String[] args) {
-        ExecQuery eq = new ExecQuery("duffy", "930006481");
+        eq = new ExecQuery("duffy", "930006481");
 
         // collect items and group by type
         List<Item> itemsList = Arrays.asList(eq.getItems());
@@ -571,14 +589,13 @@ public class MainFrame extends JFrame {
         typeGroupMap.put("Toppings", Arrays.asList("Cheese", "Toppings"));
         typeGroupMap.put("Sauces", Arrays.asList("Sauces"));
         typeGroupMap.put("Extras", Arrays.asList("Sides", "Drinks"));
+
+        currentEmployee = new Employee(2,"Conrad", "Krueger", "CKrueg", "730001845", "manager");
         
         // initialize main frame and display
         MainFrame myFrame = new MainFrame();
         myFrame.initialize();
         myFrame.managerLayout();     // initial layout
         myFrame.setVisible(true);
-
-        // close database and exit gracefully
-        eq.close();
     }
 }
