@@ -106,9 +106,11 @@ public class ExecQuery{
     }
 
     public void addItem(Item item){
+        int co_id = Integer.parseInt(run("SELECT COUNT(id) FROM item"))+1;
+        item.setID(co_id);
         run("INSERT INTO item(id, name, customer_price, restock_price, customer_amount, restock_amount, order_unit, inventory, type) VALUES("
         +item.getId()+", '"+item.getName()+"', "+item.getCustomerPrice()+", "+item.getRestockPrice()+", "+item.getCustomerAmount()+
-        ", "+item.getRestockAmount()+", '"+item.getOrderUnit()+"', "+item.getInventory()+", '"+item.getType()+"')");
+        ", "+item.getRestockAmount()+", '"+item.getOrderUnit()+"', "+item.getInventory()+", '"+item.getType()+"')");       
     }
 
     public Item getItem(String name){
