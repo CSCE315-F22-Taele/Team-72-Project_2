@@ -1,8 +1,12 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.List;
 
 import javax.swing.*;
+
+import org.w3c.dom.views.DocumentView;
 
 /**
  * Class for the GUI of the Point-of-Scale system.
@@ -19,11 +23,20 @@ public class MainFrame extends JFrame {
     private double total = 0;
     JPanel orderPanel;  // panel that configures order, changes based on server/manager
 
+    private int numButtonCols = 6;
+
+    private static Map<String, List<Item>> itemTypeMap;
+    private static LinkedHashMap<String, List<String>> typeGroupMap = new LinkedHashMap<>();
+    private static JLabel orderTotalLabel;
+
+    private static ArrayList<Item> orderItems = new ArrayList<>();
+    JPanel orderSummary;
+
 
     /**
      * Configures and displays the main layout for the Point-of-Sale GUI interface.
      * <p>
-     * This function runs at the start of the main function for the MainFrame class.
+     * This method runs at the start of the main method for the MainFrame class.
      * It adds all of the panels, text, and buttons necessary for the GUI's operation, 
      * and it also configures the main button behavior for the buttons that are included
      * in both the server and the manager pages of the GUI.
@@ -94,13 +107,14 @@ public class MainFrame extends JFrame {
         summaryTitle.setFont(titleFont);
         summaryTitle.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.black));
 
+        JPanel orderSummaryContainer = new JPanel();
+        orderSummaryContainer.setOpaque(false);
+        orderSummaryContainer.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         // configure summary pane and add styles
-        JTextArea orderSummary = new JTextArea();
-        orderSummary.setFont(paragraphFont);
-        orderSummary.setLineWrap(true);
-        orderSummary.setWrapStyleWord(true);
+        orderSummary = new JPanel();
         orderSummary.setOpaque(false);
-        orderSummary.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        orderSummaryContainer.add(orderSummary, BorderLayout.NORTH);
 
         // configure order confirm pane and add styles
         JPanel orderConfirm = new JPanel();
@@ -108,14 +122,32 @@ public class MainFrame extends JFrame {
         orderConfirm.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.black));
 
         // initialize order confirm pane elements
-        JLabel orderTotalLabel = new JLabel(String.format("Total: $%.2f", total));
+        orderTotalLabel = new JLabel(String.format("Total: $%.2f", total));
         orderTotalLabel.setFont(titleFont);
         JButton confirmButton = new JButton("Confirm");
         confirmButton.setFont(titleFont);
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setFont(titleFont);
 
-        // TODO: add functionality for buttons
+        confirmButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // TODO: send items list to backend
+                // completeCustomerOrder(orderItems, employee)
+                orderItems.clear();
+                total = 0;
+                listCustomerOrderItems();
+            }
+        });
+
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                orderItems.clear();
+                total = 0;
+                listCustomerOrderItems();
+            }
+        });
 
         // add confirm pane elements
         orderConfirm.setLayout(new GridLayout(1, 3, 2, 2));
@@ -125,7 +157,7 @@ public class MainFrame extends JFrame {
         
         // add all panes to summary pane
         summaryPanel.add(summaryTitle, BorderLayout.NORTH);
-        summaryPanel.add(orderSummary, BorderLayout.CENTER);
+        summaryPanel.add(orderSummaryContainer, BorderLayout.CENTER);
         summaryPanel.add(orderConfirm, BorderLayout.SOUTH);
 
 
@@ -155,46 +187,72 @@ public class MainFrame extends JFrame {
     /**
      * Configures the functionality and layout for the main panel for the server view of the GUI.
      * <p>
-     * This function is triggered by the "server" button included in the navigation panel at the 
-     * top of the GUI. The panel is automatically cleared and re-displayed outside of this function.
+     * This method is triggered by the "server" button included in the navigation panel at the 
+     * top of the GUI. The panel is automatically cleared and re-displayed outside of this method.
      */
     void serverLayout() {
-        int numSmallSections = 3;
-        int numBigSections = 3;
-        int numButtonCols = 5;
-        orderPanel.setLayout(new GridLayout(numSmallSections + numBigSections, 1, 0, 5));
+        // set grid layout for number of item categories
+        orderPanel.setLayout(new GridLayout(typeGroupMap.size(), 1, 0, 5));
 
-        for (int i = 0; i < numSmallSections + numBigSections; i++) {
+        // iterate through each item category and add to GUI
+        for (Map.Entry<String, List<String>> entry : typeGroupMap.entrySet()) {
             JPanel selectionPanel = new JPanel();
             JPanel selectionButtons = new JPanel();
 
+            // basic styles
             selectionButtons.setOpaque(false);
-            if (i < numSmallSections) {
-                selectionButtons.setLayout(new GridLayout(1, numButtonCols, 4, 4));
-                for (int j = 0; j < numButtonCols; j++) {
-                    JButton btn = new JButton();
-                    btn.setText("Button " + j);
-                    selectionButtons.add(btn);
-                }
-            }
-            else {
-                selectionButtons.setLayout(new GridLayout(2, numButtonCols, 4, 4));
-                for (int j = 0; j < 2 * numButtonCols; j++) {
-                    JButton btn = new JButton();
-                    btn.setText("Button " + j);
-                    selectionButtons.add(btn);
-                }
-            }
-
-            JLabel categoryName = new JLabel("Small Section " + i);
-            categoryName.setForeground(Color.white);
-            categoryName.setFont(subtitleFont);
-
-            selectionPanel.setLayout(new BorderLayout());
             selectionPanel.setOpaque(false);
-            selectionPanel.add(categoryName, BorderLayout.NORTH);
+
+            // title for category
+            JLabel categoryNameLabel = new JLabel(entry.getKey());
+            categoryNameLabel.setForeground(Color.white);
+            categoryNameLabel.setFont(subtitleFont);
+
+            // get list of all items in the current item category
+            ArrayList<Item> sectionItems = new ArrayList<Item>();
+            for (String type: entry.getValue()) {
+                List<Item> items = itemTypeMap.get(type);
+                sectionItems.addAll(items);
+            }
+            
+            // determine grid layout parameters and create layout
+            int numButtons = sectionItems.size();
+            int numRows = numButtons / numButtonCols + 1;
+            selectionButtons.setLayout(new GridLayout(numRows, numButtonCols, 4, 4));
+
+            // add elements to grid layout
+            for (int j = 0; j < numRows * numButtonCols; j++) {
+                if (j < numButtons) {   // add button
+                    Item currentItem = sectionItems.get(j);
+
+                    JButton btn = new JButton();
+                    btn.setText(currentItem.getName());
+
+                    // when button is clicked, add it to order and order summary panel
+                    btn.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            orderItems.add(currentItem);
+                            total += currentItem.getCustomerPrice();
+                            listCustomerOrderItems();   // re-list order summary items
+                        }
+                    });
+
+                    selectionButtons.add(btn);
+                }
+                else {      // all buttons have been placed ~ add blank panel
+                    JPanel empty = new JPanel();
+                    empty.setOpaque(false);
+                    selectionButtons.add(empty);
+                }
+            }
+
+            // configure layout for item category panel
+            selectionPanel.setLayout(new BorderLayout());
+            selectionPanel.add(categoryNameLabel, BorderLayout.NORTH);
             selectionPanel.add(selectionButtons, BorderLayout.CENTER);
 
+            // add to main panel grid
             orderPanel.add(selectionPanel, BorderLayout.CENTER);
         }
     }
@@ -203,8 +261,8 @@ public class MainFrame extends JFrame {
     /**
      * Configures the functionality and layout for the main panel for the manager view of the GUI.
      * <p>
-     * This function is triggered by the "manager" button included in the navigation panel at the 
-     * top of the GUI. The panel is automatically cleared and re-displayed outside of this function.
+     * This method is triggered by the "manager" button included in the navigation panel at the 
+     * top of the GUI. The panel is automatically cleared and re-displayed outside of this method.
      */
     void managerLayout() {
         orderPanel.setLayout(new BorderLayout());
@@ -229,7 +287,6 @@ public class MainFrame extends JFrame {
             btn.setFont(subtitleFont);
             restockButtons.add(btn);
         }
-        // restockCategories.add(restockButtons, BorderLayout.WEST);
 
         JPanel spreadsheet = new JPanel();
         spreadsheet.setLayout(new BorderLayout());
@@ -295,10 +352,66 @@ public class MainFrame extends JFrame {
         orderPanel.add(spreadsheet, BorderLayout.CENTER);
     }
 
+
+    /**
+     * List all of the items included in the customer order on the order summary panel.
+     * <p>
+     * This method is run every time an item is added to the order. Because of this,
+     * the order summary panel needs to be cleared and re-painted at the start of the 
+     * method in case any of the items are removed. For each item, the method lists the
+     * item name, price (if there is one), and a button to remove it.
+     */
+    void listCustomerOrderItems() {
+        orderSummary.removeAll();
+        orderSummary.revalidate();
+        orderSummary.repaint();
+
+        orderSummary.setLayout(new GridLayout(orderItems.size(), 3, 4, 4));
+
+        for (Item it: orderItems) {
+            JLabel itName = new JLabel(it.getName());
+            JLabel itPrice = new JLabel("", SwingConstants.CENTER);
+            if (it.getCustomerPrice() > 0) {
+                itPrice.setText(String.format("$%.2f", it.getCustomerPrice()));
+            }
+            JButton removeBtn = new JButton("Remove");
+
+            removeBtn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    orderItems.remove(it);
+                    total -= it.getCustomerPrice();
+                    listCustomerOrderItems();
+                }
+            });
+
+            orderSummary.add(itName);
+            orderSummary.add(itPrice);
+            orderSummary.add(removeBtn);
+        }
+
+        orderTotalLabel.setText(String.format("Total: $%.2f", total));
+    }
+
+
     public static void main(String[] args) {
+        ExecQuery eq = new ExecQuery("duffy", "930006481");
+
+        List<Item> itemsList = Arrays.asList(eq.getItems());
+        itemTypeMap = itemsList.stream().collect(Collectors.groupingBy(i -> i.getType()));
+
+        typeGroupMap.put("Base", Arrays.asList("Entree Base"));
+        typeGroupMap.put("Protein", Arrays.asList("Protein"));
+        typeGroupMap.put("Rice/Beans", Arrays.asList("Rice", "Beans"));
+        typeGroupMap.put("Toppings", Arrays.asList("Cheese", "Toppings"));
+        typeGroupMap.put("Sauces", Arrays.asList("Sauces"));
+        typeGroupMap.put("Extras", Arrays.asList("Sides", "Drinks"));
+        
         MainFrame myFrame = new MainFrame();
         myFrame.initialize();
-        myFrame.managerLayout();
+        myFrame.serverLayout();
         myFrame.setVisible(true);
+
+        eq.close();
     }
 }
