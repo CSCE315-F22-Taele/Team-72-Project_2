@@ -100,7 +100,6 @@ public class ExecQuery{
         return res.equals(pass);
     }
 
-
     public Item getItem(String name){
         String res = run("SELECT * FROM item WHERE name = '"+name+"'");
         //tokenize
@@ -128,7 +127,7 @@ public class ExecQuery{
         if(employee.getRole() == "manager"){
             Set<Item> keys = LHM.keySet();
             for(Item key : keys){
-                run("UPDATE item SET inventory=inventory+" + keys.get(key) + " where name='" + key.getName() + "'");
+                run("UPDATE item SET inventory=inventory+" + LHM.get(key) + " where name='" + key.getName() + "'");
             }
         }
     }
