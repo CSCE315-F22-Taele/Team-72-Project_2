@@ -362,12 +362,13 @@ public class MainFrame extends JFrame {
      * item name, price (if there is one), and a button to remove it.
      */
     void listCustomerOrderItems() {
+        // reset order summary panel and reconfigure layout
         orderSummary.removeAll();
         orderSummary.revalidate();
         orderSummary.repaint();
-
         orderSummary.setLayout(new GridLayout(orderItems.size(), 3, 4, 4));
 
+        // add elements to grid layout
         for (Item it: orderItems) {
             JLabel itName = new JLabel(it.getName());
             JLabel itPrice = new JLabel("", SwingConstants.CENTER);
@@ -376,6 +377,7 @@ public class MainFrame extends JFrame {
             }
             JButton removeBtn = new JButton("Remove");
 
+            // button removes item from summary panel
             removeBtn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -385,11 +387,13 @@ public class MainFrame extends JFrame {
                 }
             });
 
+            // add elements
             orderSummary.add(itName);
             orderSummary.add(itPrice);
             orderSummary.add(removeBtn);
         }
 
+        // reset total text
         orderTotalLabel.setText(String.format("Total: $%.2f", total));
     }
 
@@ -397,9 +401,11 @@ public class MainFrame extends JFrame {
     public static void main(String[] args) {
         ExecQuery eq = new ExecQuery("duffy", "930006481");
 
+        // collect items and group by type
         List<Item> itemsList = Arrays.asList(eq.getItems());
         itemTypeMap = itemsList.stream().collect(Collectors.groupingBy(i -> i.getType()));
 
+        // add entries to hash map that groups item types into categories (represented by keys)
         typeGroupMap.put("Base", Arrays.asList("Entree Base"));
         typeGroupMap.put("Protein", Arrays.asList("Protein"));
         typeGroupMap.put("Rice/Beans", Arrays.asList("Rice", "Beans"));
@@ -407,11 +413,13 @@ public class MainFrame extends JFrame {
         typeGroupMap.put("Sauces", Arrays.asList("Sauces"));
         typeGroupMap.put("Extras", Arrays.asList("Sides", "Drinks"));
         
+        // initialize main frame and display
         MainFrame myFrame = new MainFrame();
         myFrame.initialize();
-        myFrame.serverLayout();
+        myFrame.serverLayout();     // initial layout
         myFrame.setVisible(true);
 
+        // close database and exit gracefully
         eq.close();
     }
 }
