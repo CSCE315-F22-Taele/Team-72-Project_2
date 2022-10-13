@@ -6,13 +6,13 @@ public class Item{
     private double customer_amount; 
     private double restock_amount;
     private String order_unit;
-    private int inventory;
+    private double inventory;
     private String type;
 
 
     public Item(int _id, String _name, double _customer_price, double _restock_price, 
     double _customer_amount, double _restock_amount, String _order_unit, 
-    int _inventory, String _type){
+    double _inventory, String _type){
         id = _id;
         name = _name;
         customer_price = _customer_price;
@@ -45,13 +45,17 @@ public class Item{
     public String getOrderUnit(){
         return order_unit;
     }
-    public int getInventory(){
+    public double getInventory(){
         return inventory;
     }
     public String getType(){
         return type;
     }
 
+    @Override
+    public int hashCode(){
+        return id;
+    }
 
     @Override
     public String toString(){
