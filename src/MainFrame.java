@@ -713,6 +713,7 @@ public class MainFrame extends JFrame {
                 eq.addItem(item);
 
                 itemsList = Arrays.asList(eq.getItems());
+                itemTypeMap = itemsList.stream().collect(Collectors.groupingBy(i -> i.getType()));
 
                 newItemWindow.setVisible(false);
                 newItemWindow.dispose();
