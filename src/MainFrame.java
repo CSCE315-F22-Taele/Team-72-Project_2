@@ -5,8 +5,7 @@ import java.util.stream.Collectors;
 import java.util.List;
 
 import javax.swing.*;
-
-import org.w3c.dom.views.DocumentView;
+import javax.swing.event.*;
 
 /**
  * Class for the GUI of the Point-of-Scale system.
@@ -20,17 +19,21 @@ public class MainFrame extends JFrame {
     final private Font subtitleFont = new Font("Helvetica", Font.BOLD, 16);
     final private Font paragraphFont = new Font("Helvetica", Font.PLAIN, 14);
 
-    private double total = 0;
-    JPanel orderPanel;  // panel that configures order, changes based on server/manager
-
+    private double customerTotal = 0;
+    private double restockTotal = 0;
     private int numButtonCols = 6;
+    private boolean serverPage;
+    private static ArrayList<Item> customerOrderItems = new ArrayList<>();
+    private static LinkedHashMap<Item, Integer> restockOrderItems = new LinkedHashMap<>();
 
     private static Map<String, List<Item>> itemTypeMap;
     private static LinkedHashMap<String, List<String>> typeGroupMap = new LinkedHashMap<>();
+    
+    // elements that are modified outside of initialize()
+    private JPanel orderPanel;
+    private JPanel orderSummary;
+    private JPanel spreadsheetCells;
     private static JLabel orderTotalLabel;
-
-    private static ArrayList<Item> orderItems = new ArrayList<>();
-    JPanel orderSummary;
 
 
     /**
@@ -107,6 +110,7 @@ public class MainFrame extends JFrame {
         summaryTitle.setFont(titleFont);
         summaryTitle.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.black));
 
+        // configure container for order summary panel
         JPanel orderSummaryContainer = new JPanel();
         orderSummaryContainer.setOpaque(false);
         orderSummaryContainer.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -122,7 +126,7 @@ public class MainFrame extends JFrame {
         orderConfirm.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.black));
 
         // initialize order confirm pane elements
-        orderTotalLabel = new JLabel(String.format("Total: $%.2f", total));
+        orderTotalLabel = new JLabel();
         orderTotalLabel.setFont(titleFont);
         JButton confirmButton = new JButton("Confirm");
         confirmButton.setFont(titleFont);
@@ -133,20 +137,36 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // TODO: send items list to backend
-                // completeCustomerOrder(orderItems, employee)
-                orderItems.clear();
-                total = 0;
-                listCustomerOrderItems();
+                if (serverPage) {
+                    // completeCustomerOrder(customerOrderItems, employee)
+                    customerTotal = 0;
+                    customerOrderItems.clear();
+                    listCustomerOrderItems();
+                }
+                else {
+                    // completeRestockOrder(restockOrderItems, employee)
+                    restockTotal = 0;
+                    restockOrderItems.clear();
+                    listRestockOrderItems();
+                }
             }
         });
 
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                orderItems.clear();
-                total = 0;
-                listCustomerOrderItems();
+                if (serverPage) {
+                    customerTotal = 0;
+                    customerOrderItems.clear();
+                    listCustomerOrderItems();
+                }
+                else {
+                    restockTotal = 0;
+                    restockOrderItems.clear();
+                    listRestockOrderItems();
+                }
             }
+            
         });
 
         // add confirm pane elements
@@ -191,6 +211,8 @@ public class MainFrame extends JFrame {
      * top of the GUI. The panel is automatically cleared and re-displayed outside of this method.
      */
     void serverLayout() {
+        serverPage = true;
+
         // set grid layout for number of item categories
         orderPanel.setLayout(new GridLayout(typeGroupMap.size(), 1, 0, 5));
 
@@ -232,8 +254,8 @@ public class MainFrame extends JFrame {
                     btn.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            orderItems.add(currentItem);
-                            total += currentItem.getCustomerPrice();
+                            customerOrderItems.add(currentItem);
+                            customerTotal += currentItem.getCustomerPrice();
                             listCustomerOrderItems();   // re-list order summary items
                         }
                     });
@@ -255,6 +277,8 @@ public class MainFrame extends JFrame {
             // add to main panel grid
             orderPanel.add(selectionPanel, BorderLayout.CENTER);
         }
+
+        listCustomerOrderItems();   // redisplay summary
     }
 
 
@@ -265,76 +289,125 @@ public class MainFrame extends JFrame {
      * top of the GUI. The panel is automatically cleared and re-displayed outside of this method.
      */
     void managerLayout() {
+        serverPage = false;
+
         orderPanel.setLayout(new BorderLayout());
 
         JPanel restockCategories = new JPanel();
         restockCategories.setLayout(new BorderLayout());
 
-        ArrayList<String> categories = new ArrayList<String>();
-        categories.add("Bases");
-        categories.add("Protein");
-        categories.add("Rice/Beans");
-        categories.add("Toppings/Sauces");
-        categories.add("Sides");
-        categories.add("Other");
-
+        // buttons for switching between category tables
         JPanel restockButtons = new JPanel();
-        restockButtons.setLayout(new GridLayout(1, categories.size(), 2, 2));
+        restockButtons.setLayout(new GridLayout(1, typeGroupMap.size(), 2, 2));
         restockButtons.setOpaque(false);
 
-        for (String cat: categories) {
-            JButton btn = new JButton(cat);
+        // add category buttons to change tabes
+        for (String categoryName: typeGroupMap.keySet()) {
+            JButton btn = new JButton(categoryName);
             btn.setFont(subtitleFont);
             restockButtons.add(btn);
+
+            // button shows restock table for category
+            btn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    displayRestockTable(categoryName);
+                }
+            });
         }
 
+        // container for table of items and information
         JPanel spreadsheet = new JPanel();
         spreadsheet.setLayout(new BorderLayout());
         spreadsheet.setOpaque(false);
 
+        // top row of table
         JPanel spreadsheetTitle = new JPanel();
         spreadsheetTitle.setLayout(new GridLayout(1, 7, 2, 2));
         spreadsheetTitle.setOpaque(false);
 
-        JLabel ingredientName = new JLabel("Ingredient Name", SwingConstants.CENTER);
-        ingredientName.setFont(subtitleFont);
-        JLabel inventory = new JLabel("Current Inv.", SwingConstants.CENTER);
-        inventory.setFont(subtitleFont);
-        JLabel pricePerUnit = new JLabel("Price Per Unit", SwingConstants.CENTER);
-        pricePerUnit.setFont(subtitleFont);
-        JLabel unit = new JLabel("Unit", SwingConstants.CENTER);
-        unit.setFont(subtitleFont);
-        JLabel addedInventory = new JLabel("Added Inv.", SwingConstants.CENTER);
-        addedInventory.setFont(subtitleFont);
-        JLabel addedTotal = new JLabel("Added Total", SwingConstants.CENTER);
-        addedTotal.setFont(subtitleFont);
-        JLabel confirm = new JLabel("Confirm", SwingConstants.CENTER);
-        confirm.setFont(subtitleFont);
+        // add column titles to spreadsheet table
+        String[] tableLabels = {"Ingredient Name", "Current Inv.", "Price Per Unit", "Unit", "Added Inv.", "Added Total", "Confirm"};
+        for (String tl: tableLabels) {
+            JLabel tableLabel = new JLabel(tl, SwingConstants.CENTER);
+            tableLabel.setFont(subtitleFont);
+            tableLabel.setForeground(Color.white);
+            spreadsheetTitle.add(tableLabel);
+        }
 
-        spreadsheetTitle.add(ingredientName);
-        spreadsheetTitle.add(inventory);
-        spreadsheetTitle.add(pricePerUnit);
-        spreadsheetTitle.add(unit);
-        spreadsheetTitle.add(addedInventory);
-        spreadsheetTitle.add(addedTotal);
-        spreadsheetTitle.add(confirm);
-
+        // configure layout for table cells container
         JPanel spreadsheetCellsContainer = new JPanel();
         spreadsheetCellsContainer.setLayout(new BorderLayout());
         spreadsheetCellsContainer.setOpaque(false);
         
-        JPanel spreadsheetCells = new JPanel();
-        spreadsheetCells.setLayout(new GridLayout(3, 7, 2, 2));
+        // configure layout for table cells
+        spreadsheetCells = new JPanel();
         spreadsheetCells.setOpaque(false);
-        for (int i = 0; i < 3; i++) {
-            JLabel ingName = new JLabel("Ingredient " + i);
-            JLabel inv = new JLabel("XXX");
-            JLabel ppu = new JLabel("$X.XX");
-            JLabel u = new JLabel("u");
+
+        // configure layout of all panels
+        spreadsheetCellsContainer.add(spreadsheetCells, BorderLayout.NORTH);
+        spreadsheet.add(spreadsheetTitle, BorderLayout.NORTH);
+        spreadsheet.add(spreadsheetCellsContainer, BorderLayout.CENTER);
+        orderPanel.add(restockButtons, BorderLayout.NORTH);
+        orderPanel.add(spreadsheet, BorderLayout.CENTER);
+
+        // set spreadsheet to category and redisplay order summary
+        String firstCategory = typeGroupMap.keySet().toArray()[0].toString();
+        displayRestockTable(firstCategory);
+        listRestockOrderItems();
+    }
+
+
+    /**
+     * Displays a table of items on the main panel of the GUI based on the item category name.
+     * <p>
+     * This method will find all items within a category and list their information in a table 
+     * layout. Also included is a text field to enter the quantity of the item that needs to be 
+     * restocked and on option to add the item to the order. The manager of the restaurant can
+     * enter a desired quantity to restock and add it to the order.
+     * 
+     * @param categoryName specifies the category whose items are displayed in the table.
+     */
+    void displayRestockTable(String categoryName) {
+        // reconfigure spreadsheet panel
+        spreadsheetCells.removeAll();
+        spreadsheetCells.revalidate();
+        spreadsheetCells.repaint();
+
+        // get all items in the specified category
+        ArrayList<Item> sectionItems = new ArrayList<Item>();
+        for (String type: typeGroupMap.get(categoryName)) {
+            List<Item> items = itemTypeMap.get(type);
+            sectionItems.addAll(items);
+        }
+
+        // initialize and configure spreadsheet layout
+        spreadsheetCells.setLayout(new GridLayout(sectionItems.size(), 7, 2, 2));
+
+        // add each item's properties to the spreadsheet table
+        for (Item it: sectionItems) {
+            JLabel ingName = new JLabel(it.getName(), SwingConstants.CENTER);
+            JLabel inv = new JLabel(Integer.toString(it.getInventory()), SwingConstants.CENTER);
+            JLabel ppu = new JLabel(String.format("$%.2f", it.getRestockPrice()), SwingConstants.CENTER);
+            JLabel u = new JLabel(it.getOrderUnit(), SwingConstants.CENTER);
             JTextField addInv = new JTextField();
-            JLabel addTot = new JLabel("$XX.XX");
+            JLabel addTot = new JLabel("", SwingConstants.CENTER);
             JButton confBtn = new JButton("Add to Order");
 
+            ingName.setFont(paragraphFont);
+            ingName.setForeground(Color.white);
+            inv.setFont(paragraphFont);
+            inv.setForeground(Color.white);
+            ppu.setFont(paragraphFont);
+            ppu.setForeground(Color.white);
+            u.setFont(paragraphFont);
+            u.setForeground(Color.white);
+            addInv.setFont(paragraphFont);
+            addTot.setFont(paragraphFont);
+            addTot.setForeground(Color.white);
+            confBtn.setFont(paragraphFont);
+
+            // add each element to the row
             spreadsheetCells.add(ingName);
             spreadsheetCells.add(inv);
             spreadsheetCells.add(ppu);
@@ -342,14 +415,50 @@ public class MainFrame extends JFrame {
             spreadsheetCells.add(addInv);
             spreadsheetCells.add(addTot);
             spreadsheetCells.add(confBtn);
+
+            // configure button functionality
+            confBtn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {   // add price of item to total and re-list items in summary
+                        int amount = Integer.parseInt(addInv.getText());
+                        if (amount > 0) {
+                            double price = amount * it.getRestockPrice();
+                            restockTotal += price;
+                            restockOrderItems.put(it, amount);
+                            listRestockOrderItems();
+                        }
+                    }
+                    catch (NumberFormatException err) {
+                        System.out.println("ERROR: Please enter a number");
+                    }
+                }
+            });
+
+            // configure text box functionality (triggers when text changes)
+            addInv.getDocument().addDocumentListener(new DocumentListener() {
+                public void changedUpdate(DocumentEvent e) {
+                  updatePrice();
+                }
+                public void removeUpdate(DocumentEvent e) {
+                  updatePrice();
+                }
+                public void insertUpdate(DocumentEvent e) {
+                  updatePrice();
+                }
+              
+                public void updatePrice() {     // updates the price of the item at the amount in the text box
+                    try {
+                        int amount = Integer.parseInt(addInv.getText());
+                        double price = amount * it.getRestockPrice();
+                        addTot.setText(String.format("$%.2f", price));
+                    }
+                    catch (NumberFormatException err) { 
+                        addTot.setText("");
+                    }
+                }
+            });
         }
-        spreadsheetCellsContainer.add(spreadsheetCells, BorderLayout.NORTH);
-
-        spreadsheet.add(spreadsheetTitle, BorderLayout.NORTH);
-        spreadsheet.add(spreadsheetCellsContainer, BorderLayout.CENTER);
-
-        orderPanel.add(restockButtons, BorderLayout.NORTH);
-        orderPanel.add(spreadsheet, BorderLayout.CENTER);
     }
 
 
@@ -366,10 +475,10 @@ public class MainFrame extends JFrame {
         orderSummary.removeAll();
         orderSummary.revalidate();
         orderSummary.repaint();
-        orderSummary.setLayout(new GridLayout(orderItems.size(), 3, 4, 4));
+        orderSummary.setLayout(new GridLayout(customerOrderItems.size(), 3, 4, 4));
 
         // add elements to grid layout
-        for (Item it: orderItems) {
+        for (Item it: customerOrderItems) {
             JLabel itName = new JLabel(it.getName());
             JLabel itPrice = new JLabel("", SwingConstants.CENTER);
             if (it.getCustomerPrice() > 0) {
@@ -381,11 +490,15 @@ public class MainFrame extends JFrame {
             removeBtn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    orderItems.remove(it);
-                    total -= it.getCustomerPrice();
+                    customerOrderItems.remove(it);
+                    customerTotal -= it.getCustomerPrice();
                     listCustomerOrderItems();
                 }
             });
+
+            itName.setFont(paragraphFont);
+            itPrice.setFont(paragraphFont);
+            removeBtn.setFont(paragraphFont);
 
             // add elements
             orderSummary.add(itName);
@@ -394,7 +507,53 @@ public class MainFrame extends JFrame {
         }
 
         // reset total text
-        orderTotalLabel.setText(String.format("Total: $%.2f", total));
+        orderTotalLabel.setText(String.format("Total: $%.2f", customerTotal));
+    }
+
+
+    void listRestockOrderItems() {
+        // reset order summary panel and reconfigure layout
+        orderSummary.removeAll();
+        orderSummary.revalidate();
+        orderSummary.repaint();
+        orderSummary.setLayout(new GridLayout(restockOrderItems.size(), 4, 4, 4));
+
+        // add elements to grid layout
+
+        for (Map.Entry<Item, Integer> entry: restockOrderItems.entrySet()) {
+            Item it = entry.getKey();
+            int amount = entry.getValue();
+            double price = amount * it.getRestockPrice();
+
+            JLabel itName = new JLabel(it.getName(), SwingConstants.CENTER);
+            JLabel itAmount = new JLabel(Integer.toString(amount), SwingConstants.CENTER);
+            JLabel itPrice = new JLabel(String.format("$%.2f", price), SwingConstants.CENTER);
+            JButton removeBtn = new JButton("Remove");
+
+            // button removes item from summary panel
+            removeBtn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    restockTotal -= price;
+                    restockOrderItems.remove(it);
+                    listRestockOrderItems();
+                }
+            });
+
+            itName.setFont(paragraphFont);
+            itAmount.setFont(paragraphFont);
+            itPrice.setFont(paragraphFont);
+            removeBtn.setFont(paragraphFont);
+
+            // add elements
+            orderSummary.add(itName);
+            orderSummary.add(itAmount);
+            orderSummary.add(itPrice);
+            orderSummary.add(removeBtn);
+        }
+
+        // reset total text
+        orderTotalLabel.setText(String.format("Total: $%.2f", restockTotal));
     }
 
 
@@ -416,7 +575,7 @@ public class MainFrame extends JFrame {
         // initialize main frame and display
         MainFrame myFrame = new MainFrame();
         myFrame.initialize();
-        myFrame.serverLayout();     // initial layout
+        myFrame.managerLayout();     // initial layout
         myFrame.setVisible(true);
 
         // close database and exit gracefully
