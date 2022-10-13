@@ -51,6 +51,12 @@ public class Item{
     public String getType(){
         return type;
     }
+    public void setInventory(double amount){
+        inventory = amount;
+    }
+    public void setCustomerPrice(double amount){
+        customer_price = amount;
+    } 
 
     @Override
     public int hashCode(){
