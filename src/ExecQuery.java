@@ -85,11 +85,6 @@ public class ExecQuery{
         }
     }
 
-
-    /*public double add(String ingredient){
-
-    }*/
-
     public boolean verifyManager(String user, String pass){
         String isManager = run("SELECT role FROM employee WHERE username = '"+user+"'");
         return verifyServer(user, pass) && isManager.equals("manager");
@@ -100,11 +95,13 @@ public class ExecQuery{
         return res.equals(pass);
     }
 
+    //TODO: change customer price of specified item
     public void changeItemPrice(Item item, double price){
         run("UPDATE item SET customer_price = "+ price + " WHERE name = '" + item.getName() +"'");
         item.setCustomerPrice(price);
     }
 
+    //TODO: add new item entry into item table in DB
     public void addItem(Item item){
         int co_id = Integer.parseInt(run("SELECT COUNT(id) FROM item"))+1;
         item.setID(co_id);
@@ -113,6 +110,7 @@ public class ExecQuery{
         ", "+item.getRestockAmount()+", '"+item.getOrderUnit()+"', "+item.getInventory()+", '"+item.getType()+"')");       
     }
 
+    //TODO: Gets selected item from item table by specified name
     public Item getItem(String name){
         String res = run("SELECT * FROM item WHERE name = '"+name+"'");
         //tokenize
@@ -135,7 +133,7 @@ public class ExecQuery{
         return item;
     }
 
-
+    //TODO: Updates inentory amount when a restock order is placed
     public void confirmRestockOrder(LinkedHashMap <Item, Integer> LHM, Employee employee){
         if(employee.getRole() == "manager"){
             Set<Item> keys = LHM.keySet();
@@ -181,7 +179,7 @@ public class ExecQuery{
 
     }
 
-
+    //TODO: Updates database with new customer order information
     public void confirmCustomerOrder(ArrayList<Item> items, Employee employee){
         double price = 0;
         int co_id = Integer.parseInt(run("SELECT COUNT(id) FROM customer_orders"))+1;
