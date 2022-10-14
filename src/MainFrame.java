@@ -140,10 +140,10 @@ public class MainFrame extends JFrame {
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setFont(titleFont);
 
+        // add functionality to confirm orders
         confirmButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO: send items list to backend
                 if (serverPage) {
                     eq.confirmCustomerOrder(customerOrderItems, currentEmployee);
                     customerTotal = 0;
@@ -160,6 +160,7 @@ public class MainFrame extends JFrame {
             }
         });
 
+        // add functionality to cancel orders
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -351,11 +352,12 @@ public class MainFrame extends JFrame {
             spreadsheetTitle.add(tableLabel);
         }
 
+        // button to add item to item database
         JButton addItemBtn = new JButton("Add Item");
         addItemBtn.setFont(paragraphFont);
         spreadsheet.add(addItemBtn, BorderLayout.SOUTH);
 
-        // TODO: add button functionality
+        // configure button to add item to items database
         addItemBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -618,19 +620,26 @@ public class MainFrame extends JFrame {
         orderTotalLabel.setText(String.format("Total: $%.2f", restockTotal));
     }
 
+
+    /**
+     * Adds an item to the items database from the GUI.
+     * <p>
+     * This method will open a window asking the user to input the attributes of
+     * a new Item object to be added to the itemsList and to the database. The \
+     * method will create the Item object and add it to both entities
+     */
     void addItemFromGUI() {
+        // configure panel
         JFrame newItemWindow = new JFrame("Add Item");
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
+        // configure grid layout
         JPanel attGrid = new JPanel();
         attGrid.setLayout(new GridLayout(8, 2, 4, 4));
 
-        List<String> attributes = Arrays.asList("Name", "Customer Price", "Restock Price", 
-                                                        "Customer Amount", "Restock Amount", "Order Unit", 
-                                                        "Inventory", "Type");
-
+        // configure all elements to be added to the grid
         JLabel nameLab = new JLabel("Name");
         nameLab.setFont(paragraphFont);
         JTextField nameField = new JTextField();
@@ -671,6 +680,7 @@ public class MainFrame extends JFrame {
         JTextField typeField = new JTextField();
         typeField.setFont(paragraphFont);
 
+        // add each element to grid layout
         attGrid.add(nameLab);
         attGrid.add(nameField);
         attGrid.add(cpLab);
@@ -688,16 +698,20 @@ public class MainFrame extends JFrame {
         attGrid.add(typeLab);
         attGrid.add(typeField);
 
+        // configure layout for button wrapper
         JPanel buttonWrapper = new JPanel();
         buttonWrapper.setLayout(new BorderLayout());
 
+        // configure elements for adding item to database
         JButton confBtn = new JButton();
         confBtn.setText("Add Item");
         confBtn.setFont(paragraphFont);
 
+        // add configure button functionality 
         confBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // get item values
                 String name = nameField.getText();
                 double customerPrice = Double.parseDouble(cpField.getText());
                 double restockPrice = Double.parseDouble(rpField.getText());
@@ -707,30 +721,30 @@ public class MainFrame extends JFrame {
                 String orderUnit = unitField.getText();
                 String type = typeField.getText();
 
+                // create item object
                 Item item = new Item(-1, name, customerPrice, restockPrice, customerAmount, 
                                         restockAmount, orderUnit, inventory, type);
-                System.out.println();
-                eq.addItem(item);
 
+                // add item to entities
+                eq.addItem(item);
                 itemsList = Arrays.asList(eq.getItems());
                 itemTypeMap = itemsList.stream().collect(Collectors.groupingBy(i -> i.getType()));
 
+                // close window gracefully
                 newItemWindow.setVisible(false);
                 newItemWindow.dispose();
             }
         });
 
+        // configure window layout
         buttonWrapper.add(confBtn, BorderLayout.WEST);
-
         mainPanel.add(attGrid, BorderLayout.NORTH);
         mainPanel.add(buttonWrapper, BorderLayout.SOUTH);
-
         newItemWindow.add(mainPanel);
 
+        // edit remoaning styled
         newItemWindow.setMinimumSize(new Dimension(300, 400));
-
         newItemWindow.setTitle("Add Item");
-        // newItemWindow.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         newItemWindow.setVisible(true);
     }
 
@@ -755,7 +769,7 @@ public class MainFrame extends JFrame {
         // initialize main frame and display
         MainFrame myFrame = new MainFrame();
         myFrame.initialize();
-        myFrame.managerLayout();     // initial layout
+        myFrame.serverLayout();     // initial layout
         myFrame.setVisible(true);
     }
 }
