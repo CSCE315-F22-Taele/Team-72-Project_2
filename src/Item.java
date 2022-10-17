@@ -8,11 +8,12 @@ public class Item{
     private String order_unit;
     private double inventory;
     private String type;
+    private double min_amount;
 
 
     public Item(int _id, String _name, double _customer_price, double _restock_price, 
     double _customer_amount, double _restock_amount, String _order_unit, 
-    double _inventory, String _type){
+    double _inventory, String _type, double _min_amount){
         id = _id;
         name = _name;
         customer_price = _customer_price;
@@ -22,6 +23,7 @@ public class Item{
         order_unit = _order_unit;
         inventory = _inventory;
         type = _type;
+        min_amount = _min_amount;
     }
 
     public int getId(){
@@ -51,6 +53,9 @@ public class Item{
     public String getType(){
         return type;
     }
+    public double getMinAmount(){
+        return min_amount;
+    }
     public void setID(int _id){
         id = _id;
     }
@@ -71,7 +76,7 @@ public class Item{
         String str = "id: " + getId() + ", name: " + getName() 
         + ", customer price: " + getCustomerPrice() + ", restock price: " + getRestockPrice()
         + ", customer amount: " + getCustomerAmount() + ", restock amount: " + getRestockAmount()
-        + ", order unit: " + getOrderUnit() + ", inventory: " + inventory + ", type: " + getType();
+        + ", order unit: " + getOrderUnit() + ", inventory: " + getInventory() + ", type: " + getType() + ", min amount: " + getMinAmount();
         return str;
     }
 
