@@ -461,16 +461,59 @@ public class MainFrame extends JFrame {
             spreadsheetTitle.add(tableLabel);
         }
 
+        JPanel btnContainer = new JPanel();
+        btnContainer.setLayout(new BorderLayout());
+        btnContainer.setOpaque(false);
+
+        JPanel reportContainer = new JPanel();
+        reportContainer.setLayout(new GridLayout(1, 3, 0, 0));
+        reportContainer.setOpaque(false);
+
         // button to add item to item database
         JButton addItemBtn = new JButton("Add Item");
         addItemBtn.setFont(paragraphFont);
-        spreadsheet.add(addItemBtn, BorderLayout.SOUTH);
 
-        // configure button to add item to items database
+        // report buttons
+        JButton salesReport = new JButton("Sales Report");
+        salesReport.setFont(paragraphFont);
+        reportContainer.add(salesReport);
+
+        JButton excessReport = new JButton("Excess Report");
+        excessReport.setFont(paragraphFont);
+        reportContainer.add(excessReport);
+
+        JButton restockReport = new JButton("Restock Report");
+        restockReport.setFont(paragraphFont);
+        reportContainer.add(restockReport);
+
+        // add buttons to layout
+        btnContainer.add(reportContainer, BorderLayout.EAST);
+        btnContainer.add(addItemBtn, BorderLayout.WEST);
+        spreadsheet.add(btnContainer, BorderLayout.SOUTH);
+
+        // configure all button functionalities
         addItemBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 addItemFromGUI();
+            }
+        });
+        salesReport.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                displaySalesReport();
+            }
+        });
+        excessReport.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                displayExcessReport();
+            }
+        });
+        restockReport.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                displayRestockReport();
             }
         });
 
@@ -746,7 +789,7 @@ public class MainFrame extends JFrame {
 
         // configure grid layout
         JPanel attGrid = new JPanel();
-        attGrid.setLayout(new GridLayout(8, 2, 4, 4));
+        attGrid.setLayout(new GridLayout(9, 2, 4, 4));
 
         // configure all elements to be added to the grid
         JLabel nameLab = new JLabel("Name");
@@ -789,6 +832,11 @@ public class MainFrame extends JFrame {
         JTextField typeField = new JTextField();
         typeField.setFont(paragraphFont);
 
+        JLabel minAmtLab = new JLabel("Minumum Stock Amount");
+        typeLab.setFont(paragraphFont);
+        JTextField minAmtField = new JTextField();
+        typeField.setFont(paragraphFont);
+
         // add each element to grid layout
         attGrid.add(nameLab);
         attGrid.add(nameField);
@@ -806,6 +854,8 @@ public class MainFrame extends JFrame {
         attGrid.add(invField);
         attGrid.add(typeLab);
         attGrid.add(typeField);
+        attGrid.add(minAmtLab);
+        attGrid.add(minAmtField);
 
         // configure layout for button wrapper
         JPanel buttonWrapper = new JPanel();
@@ -829,10 +879,11 @@ public class MainFrame extends JFrame {
                 double inventory = Double.parseDouble(invField.getText());
                 String orderUnit = unitField.getText();
                 String type = typeField.getText();
+                double minAmount = Double.parseDouble(minAmtField.getText());
 
                 // create item object
                 Item item = new Item(-1, name, customerPrice, restockPrice, customerAmount, 
-                                        restockAmount, orderUnit, inventory, type);
+                                        restockAmount, orderUnit, inventory, type, minAmount);
 
                 // add item to entities
                 eq.addItem(item);
@@ -851,10 +902,56 @@ public class MainFrame extends JFrame {
         mainPanel.add(buttonWrapper, BorderLayout.SOUTH);
         newItemWindow.add(mainPanel);
 
-        // edit remoaning styled
+        // edit remoaning styles
         newItemWindow.setMinimumSize(new Dimension(300, 400));
-        newItemWindow.setTitle("Add Item");
         newItemWindow.setVisible(true);
+    }
+
+
+    // TODO: finish function
+    void displaySalesReport() {
+        // frame and panel initialization
+        JFrame reportWindow = new JFrame("Sales Report");
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // configure layout of main panel 
+        reportWindow.add(mainPanel);
+
+        // edit remoaning styles
+        reportWindow.setMinimumSize(new Dimension(720, 480));
+        reportWindow.setVisible(true);
+    }
+    // TODO: finish function
+    void displayExcessReport() {
+        // frame and panel initialization
+        JFrame reportWindow = new JFrame("Excess Report");
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // configure layout of main panel 
+        reportWindow.add(mainPanel);
+
+        // edit remoaning styles
+        reportWindow.setMinimumSize(new Dimension(720, 480));
+        reportWindow.setVisible(true);
+    }
+    // TODO: finish function
+    void displayRestockReport() {
+        // frame and panel initialization
+        JFrame reportWindow = new JFrame("Restock Report");
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // configure layout of main panel 
+        reportWindow.add(mainPanel);
+
+        // edit remoaning styles
+        reportWindow.setMinimumSize(new Dimension(720, 480));
+        reportWindow.setVisible(true);
     }
 
 
