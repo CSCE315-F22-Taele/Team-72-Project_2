@@ -124,7 +124,7 @@ public class ExecQuery{
     public boolean verifyManager(String user, String pass){
         
         String isManager = run("SELECT role FROM employee WHERE username = '"+user+"'");
-        System.out.println(isManager + " " + verifyServer(user, pass));
+        //System.out.println(isManager + " " + verifyServer(user, pass));
         return verifyServer(user, pass) && isManager.equals("manager");
     }
 
@@ -295,7 +295,7 @@ public class ExecQuery{
 
         run("INSERT INTO co_to_coi(co_id, coi_id) VALUES ("+co_id+", " + original_coi_id +")");
         
-        System.out.println("Protein: "+ proteinID + " Type: "+ containerID);
+        //System.out.println("Protein: "+ proteinID + " Type: "+ containerID);
         run("INSERT INTO coi_to_i(coi_id, i_id) VALUES ("+original_coi_id+", " + proteinID +")");
         run("INSERT INTO coi_to_i(coi_id, i_id) VALUES ("+original_coi_id+", " + containerID +")");
         
@@ -315,7 +315,6 @@ public class ExecQuery{
             String res = run("SELECT id, name, customer_price, restock_price, customer_amount, restock_amount, order_unit, inventory, type, min_amount FROM item OFFSET "+i+" LIMIT 1");
 
 
-          
             //Tokenize
             String[] attrib = new String[10];
             int k = 0;
@@ -439,7 +438,6 @@ public class ExecQuery{
     }
 
     ArrayList<Item> getRestockReport(){
-        final double MINIMUM_AMOUNT = 20;
 
         ArrayList<String[]> res = runArrayList("SELECT name, inventory FROM item");
 
@@ -449,7 +447,7 @@ public class ExecQuery{
             double inventory = Double.parseDouble(arr[1]);
             Item i = getItem(arr[0]);
 
-            if (inventory < MINIMUM_AMOUNT){
+            if (inventory < i.getMinAmount()){
                 report.add(i);
             }
         }
