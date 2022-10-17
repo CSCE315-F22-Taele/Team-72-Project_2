@@ -70,7 +70,7 @@ public class Item{
     public int hashCode(){
         return id;
     }
-
+    
     @Override
     public String toString(){
         String str = "id: " + getId() + ", name: " + getName() 
