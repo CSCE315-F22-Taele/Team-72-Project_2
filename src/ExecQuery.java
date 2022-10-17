@@ -73,7 +73,11 @@ public class ExecQuery{
         }  
     }
 
-
+    /**
+     * Executes an sql query
+     * @param query string containing the sql query
+     * @return ArrayList containing an array of strings representing the results from query, empty string if no results outputted
+     */
     public ArrayList<String[]> runArrayList(String query){
         try{
             Statement stmt = conn.createStatement();
@@ -121,6 +125,12 @@ public class ExecQuery{
         }
     }
 
+    /**
+     * Verifies that the current user is a manager
+     * @param user string that holds the user's username
+     * @param pass string that holds the user's password
+     * @return boolean that is true if user is manager, else false if not
+     */
     public boolean verifyManager(String user, String pass){
         
         String isManager = run("SELECT role FROM employee WHERE username = '"+user+"'");
@@ -128,19 +138,33 @@ public class ExecQuery{
         return verifyServer(user, pass) && isManager.equals("manager");
     }
 
+    /**
+     * Verifies that the current user is a server
+     * @param user string that holds the user's username
+     * @param pass string that holds the user's password
+     * @return boolean that is true if user is server, else false if not
+     */
     public boolean verifyServer(String user, String pass){
         String res = run("SELECT password FROM employee WHERE username = '"+user+"'");
         //System.out.println("Res|pass: "+ res + " " + pass);
         return res.equals(pass);
     }
 
+    /**
+     * Changes price of specified item
+     * @param item current item whoms price is being altered
+     * @param price double that holds new price of item
+     */
     //TODO: change customer price of specified item
     public void changeItemPrice(Item item, double price){
         run("UPDATE item SET customer_price = "+ price + " WHERE name = '" + item.getName() +"'");
         item.setCustomerPrice(price);
     }
 
-    //TODO: add new item entry into item table in DB
+    /**
+     * Add new item entry into item table in DB
+     * @param item new item to be created
+     */
     public void addItem(Item item){
         int co_id = Integer.parseInt(run("SELECT COUNT(id) FROM item"))+1;
         item.setID(co_id);
@@ -149,7 +173,11 @@ public class ExecQuery{
         ", "+item.getRestockAmount()+", '"+item.getOrderUnit()+"', "+item.getInventory()+", '"+item.getType()+", " + item.getMinAmount()+"')");       
     }
 
-    //TODO: Gets selected item from item table by specified name
+    /**
+     * Gets selected item from item table by specified name
+     * @param name string of item's name to be grabbed
+     * @return new the item specified by its name
+     */
     public Item getItem(String name){
         String res = run("SELECT * FROM item WHERE name = '"+name+"'");
         //tokenize
@@ -173,7 +201,11 @@ public class ExecQuery{
         return item;
     }
 
-    //TODO: Updates inentory amount when a restock order is placed
+    /**
+     * AUpdates inentory amount when a restock order is placed
+     * @param LHM linkedhashmap that contains specified item and how many units of it to restock
+     * @param employee current user, used to verify if employee is manager
+     */
     public void confirmRestockOrder(LinkedHashMap <Item, Integer> LHM, Employee employee){
         if(employee.getRole() == "manager"){
             Set<Item> keys = LHM.keySet();
@@ -185,7 +217,10 @@ public class ExecQuery{
         }
     }
 
-    //Decrease Inventory of item name
+    /**
+     * Decrease inventory of specified item by 1 unit
+     * @param item item to have its inventory decreased
+     */
     public void decrease(Item item) throws Exception{
         //edge case Chips and Queso
 
