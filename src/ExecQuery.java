@@ -122,12 +122,15 @@ public class ExecQuery{
     }
 
     public boolean verifyManager(String user, String pass){
+        
         String isManager = run("SELECT role FROM employee WHERE username = '"+user+"'");
+        System.out.println(isManager + " " + verifyServer(user, pass));
         return verifyServer(user, pass) && isManager.equals("manager");
     }
 
     public boolean verifyServer(String user, String pass){
         String res = run("SELECT password FROM employee WHERE username = '"+user+"'");
+        //System.out.println("Res|pass: "+ res + " " + pass);
         return res.equals(pass);
     }
 
@@ -141,9 +144,9 @@ public class ExecQuery{
     public void addItem(Item item){
         int co_id = Integer.parseInt(run("SELECT COUNT(id) FROM item"))+1;
         item.setID(co_id);
-        run("INSERT INTO item(id, name, customer_price, restock_price, customer_amount, restock_amount, order_unit, inventory, type) VALUES("
+        run("INSERT INTO item(id, name, customer_price, restock_price, customer_amount, restock_amount, order_unit, inventory, type, min_amount) VALUES("
         +item.getId()+", '"+item.getName()+"', "+item.getCustomerPrice()+", "+item.getRestockPrice()+", "+item.getCustomerAmount()+
-        ", "+item.getRestockAmount()+", '"+item.getOrderUnit()+"', "+item.getInventory()+", '"+item.getType()+"')");       
+        ", "+item.getRestockAmount()+", '"+item.getOrderUnit()+"', "+item.getInventory()+", '"+item.getType()+", " + item.getMinAmount()+"')");       
     }
 
     //TODO: Gets selected item from item table by specified name
@@ -151,7 +154,7 @@ public class ExecQuery{
         String res = run("SELECT * FROM item WHERE name = '"+name+"'");
         //tokenize
 
-        String[] attrib = new String[9];
+        String[] attrib = new String[10];
         int k = 0;
         int prev = 0;
         for( int curr = 0; curr < res.length(); curr++){
@@ -164,7 +167,8 @@ public class ExecQuery{
         attrib[k] = res.substring(prev,res.length());
 
         Item item = new Item(Integer.parseInt(attrib[0]), attrib[1], Double.parseDouble(attrib[2]),
-        Double.parseDouble(attrib[3]), Double.parseDouble(attrib[4]), Double.parseDouble(attrib[5]), attrib[6], Double.parseDouble(attrib[7]), attrib[8]);
+        Double.parseDouble(attrib[3]), Double.parseDouble(attrib[4]), Double.parseDouble(attrib[5]), attrib[6], 
+        Double.parseDouble(attrib[7]), attrib[8], Double.parseDouble(attrib[9]));
         
         return item;
     }
@@ -312,7 +316,7 @@ public class ExecQuery{
 
 
             //Tokenize
-            String[] attrib = new String[9];
+            String[] attrib = new String[10];
             int k = 0;
             int prev = 0;
             for( int curr = 0; curr < res.length(); curr++){
@@ -329,7 +333,8 @@ public class ExecQuery{
             //String type = run("SELECT type FROM item OFFSET "+i+" LIMIT 1");
             //String price_str = run("SELECT customer_price FROM item OFFSET "+i+" LIMIT 1");
             Item item = new Item(Integer.parseInt(attrib[0]), attrib[1], Double.parseDouble(attrib[2]),
-            Double.parseDouble(attrib[3]), Double.parseDouble(attrib[4]), Double.parseDouble(attrib[5]), attrib[6], Double.parseDouble(attrib[7]), attrib[8]);
+            Double.parseDouble(attrib[3]), Double.parseDouble(attrib[4]), Double.parseDouble(attrib[5]), 
+            attrib[6], Double.parseDouble(attrib[7]), attrib[8], Double.parseDouble(attrib[9]));
             items[i] = item;
 
             i++;
