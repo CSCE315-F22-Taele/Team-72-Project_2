@@ -2,9 +2,9 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.text.SimpleDateFormat;  
 import java.util.Date;  
-import java.util.Arrays;  
 import java.util.Set;
 import java.util.LinkedHashMap;
+import java.util.HashMap;
 
 
 /** ExecQuery Class that executes sql queries on a database
@@ -70,6 +70,42 @@ public class ExecQuery{
                 close();
             }
             return "";
+        }  
+    }
+
+
+    public ArrayList<String[]> runArrayList(String query){
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet result = stmt.executeQuery(query);
+            ResultSetMetaData rsmd = result.getMetaData();
+
+            int columnsNumber = rsmd.getColumnCount();
+
+            ArrayList<String[]> data = new ArrayList<>();
+
+            
+    
+
+            while (result.next()) {
+                String[] res = new String[columnsNumber];
+                for (int i = 1; i <= columnsNumber; i++) {
+                    res[i-1] = result.getString(i);    
+                    //System.out.println("Here: "+(String[]) (a.getArray()));    
+                }
+                data.add(res);
+            }
+            
+            return data;
+
+        }catch(Exception e){
+            if (! e.getMessage().equals("No results were returned by the query.")){
+                //e.printStackTrace();
+                System.err.println(e.getClass().getName()+": "+e.getMessage());
+                System.out.println("Tried Executing: "+ query);
+                close();
+            }
+            return null;
         }  
     }
 
@@ -195,7 +231,7 @@ public class ExecQuery{
         int containerID = 0;
 
 
-        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");  
         Date date = new Date();  
         String time_of_order = formatter.format(date).toString();
         
@@ -336,9 +372,102 @@ public class ExecQuery{
         return res;
      }
 
+
+
+
+    //Reports
+
+
+    HashMap<Item, ArrayList<CustomerOrder>> getSalesReport(String start, String end){
+        HashMap<Item, ArrayList<CustomerOrder>> report = new HashMap<>();
+        
+        ArrayList<String[]> res = runArrayList("select * from customer_orders WHERE time_of_order BETWEEN '"+start+"' AND '"+end+"'");
+        Item[] items = getItems();
+
+        //Populate hashmap
+        for (Item i: items){
+            report.put(i, new ArrayList<CustomerOrder>());
+        }
+
+        for (String[] arr: res){
+            CustomerOrder co = new CustomerOrder(Long.parseLong(arr[0]), Double.parseDouble(arr[1]), arr[2], Integer.parseInt(arr[3]));
+
+            ArrayList<String[]> itemNames = runArrayList("SELECT name FROM item WHERE id IN (SELECT i_id from coi_to_i WHERE coi_id IN (SELECT coi_id FROM co_to_coi WHERE co_id="+co.getId()+"))");
+            
+            for (String[] name: itemNames){
+                Item i = getItem(name[0]);
+                
+                ArrayList<CustomerOrder> single_report = report.get(i);
+                single_report.add(co);
+                report.put(i, single_report);
+            }
+        }
+        
+        return report;
+    }
+
+    ArrayList<Item> getExcessReport(String start){
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");  
+        Date date = new Date();  
+        String end = formatter.format(date).toString();
+
+        HashMap<Item, ArrayList<CustomerOrder>> sales = getSalesReport(start, end);
+
+        ArrayList<Item> report = new ArrayList<>();
+
+        for (Item i: sales.keySet()){
+            int numOfSales = sales.get(i).size();
+            double inventory_now = i.getInventory();
+            double customer_amount = i.getCustomerAmount();
+
+            double inventory_before = numOfSales*customer_amount + inventory_now;
+
+            //calc if it has less than 10 percent
+
+            if (inventory_before * 0.90 < inventory_now){
+                report.add(i);
+            }
+        }
+
+        return report;
+    }
+
+    ArrayList<Item> getRestockReport(){
+        final double MINIMUM_AMOUNT = 20;
+
+        ArrayList<String[]> res = runArrayList("SELECT name, inventory FROM item");
+
+        ArrayList<Item> report = new ArrayList<>();
+
+        for (String[] arr: res){
+            double inventory = Double.parseDouble(arr[1]);
+            Item i = getItem(arr[0]);
+
+            if (inventory < MINIMUM_AMOUNT){
+                report.add(i);
+            }
+        }
+        return report;
+    }
+
+
+
+
     public static void main(String[] args) throws Exception{
         ExecQuery ex = new ExecQuery("krueger", "730001845");
-      
+        
+        HashMap<Item, ArrayList<CustomerOrder>> hm = ex.getSalesReport("2022-10-1", "2022-10-16");
+
+        for (Item i: hm.keySet()){
+            ArrayList<CustomerOrder> arr = hm.get(i);
+            
+            System.out.println(i.getName()+":");
+            for (CustomerOrder co: arr){
+                System.out.println(co);
+            }
+            System.out.println();
+        }
+        /* 
         Item test[] = ex.getItems();
 
         Employee conrad = new Employee(2,"Conrad", "Krueger", "CKrueg", "730001845", "manager");
@@ -348,6 +477,8 @@ public class ExecQuery{
             items.add(i);
 
         ex.confirmCustomerOrder(items, conrad);
+        
+        */
 
 
         /* 
