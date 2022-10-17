@@ -312,9 +312,10 @@ public class ExecQuery{
         Item items[] = new Item[row_amt];
 
         while (i < row_amt){
-            String res = run("SELECT id, name, customer_price, restock_price, customer_amount, restock_amount, order_unit, inventory, type FROM item OFFSET "+i+" LIMIT 1");
+            String res = run("SELECT id, name, customer_price, restock_price, customer_amount, restock_amount, order_unit, inventory, type, min_amount FROM item OFFSET "+i+" LIMIT 1");
 
 
+          
             //Tokenize
             String[] attrib = new String[10];
             int k = 0;
