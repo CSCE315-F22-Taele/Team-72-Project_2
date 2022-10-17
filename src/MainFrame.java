@@ -74,7 +74,8 @@ public class MainFrame extends JFrame {
                 orderPanel.removeAll();
                 orderPanel.revalidate();
                 orderPanel.repaint();
-                serverLayout();
+                loginLayout(false);
+                //serverLayout();
                 setVisible(true);
             }
         });
@@ -88,14 +89,15 @@ public class MainFrame extends JFrame {
                 orderPanel.removeAll();
                 orderPanel.revalidate();
                 orderPanel.repaint();
-                managerLayout();
+                loginLayout(true);
+                //managerLayout();
                 setVisible(true);
             }
         });
 
         // buttons layout
         JPanel buttonsPanel = new JPanel();
-        buttonsPanel.setLayout(new GridLayout(1, 2, 0, 0));
+        buttonsPanel.setLayout(new GridLayout(1, 4, 0, 0));
         buttonsPanel.add(serverButton);
         buttonsPanel.add(managerButton);
 
@@ -296,6 +298,113 @@ public class MainFrame extends JFrame {
         }
 
         listCustomerOrderItems();   // redisplay summary
+    }
+
+
+
+    void loginLayout(boolean isManagerPanel){
+        String ttl = "";
+        if (isManagerPanel){
+            ttl = "Manager Page Login";
+        }
+        else{
+            ttl = "Server Page Login";
+        }
+        JLabel title = new JLabel(ttl);
+        title.setFont(new Font("Helvetica", Font.BOLD, 22));
+        title.setForeground(Color.black);
+        title.setHorizontalAlignment(JLabel.CENTER);
+
+
+        JLabel lbUsername = new JLabel("Username:");
+        lbUsername.setFont(titleFont);
+        lbUsername.setForeground(Color.black);
+        JTextField username = new JTextField();
+
+        JLabel lbPassword = new JLabel("Password:");
+        lbPassword.setFont(titleFont);
+        lbPassword.setForeground(Color.black);
+        JTextField password = new JTextField();
+        
+        JPanel titlePanel = new JPanel();
+        titlePanel.add(title);
+        titlePanel.setBackground(new Color(87,87,87));
+
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new GridLayout(2,2, 1, 5));
+        formPanel.setBorder(new EmptyBorder(20,20, 20, 20));
+        formPanel.add(lbUsername);
+        formPanel.add(username);
+        formPanel.add(lbPassword);
+        formPanel.add(password);
+        formPanel.setBackground(new Color(87,87,87));
+
+
+        //Confirm
+        JLabel lbgrant = new JLabel();
+        lbgrant.setFont(subtitleFont);
+        lbgrant.setForeground(new Color(200,0,0));
+        lbgrant.setHorizontalAlignment(JLabel.CENTER);
+
+        JButton btnEnter = new JButton("Enter");
+        btnEnter.setFont(subtitleFont);
+        btnEnter.addActionListener(new ActionListener(){
+
+            @Override
+            public void actionPerformed(ActionEvent e){
+                if (isManagerPanel){
+                    if (eq.verifyManager(username.getText(), password.getText())){
+                        orderPanel.removeAll();
+                        orderPanel.revalidate();
+                        orderPanel.repaint();
+                        managerLayout();
+                    }else{
+                        lbgrant.setText("ERROR: Invalid Username or Password");  
+                    }
+                }else{
+                    if (eq.verifyServer(username.getText(), password.getText())){
+                        orderPanel.removeAll();
+                        orderPanel.revalidate();
+                        orderPanel.repaint();
+                        serverLayout();
+                    }else{
+                        lbgrant.setText("ERROR: Invalid Username or Password");  
+                    }
+                }
+                
+            }
+
+        
+        });
+
+        
+        JButton btnClear = new JButton("Clear");
+        btnClear.setFont(subtitleFont);
+        btnClear.addActionListener(new ActionListener(){
+
+            @Override
+            public void actionPerformed(ActionEvent e){
+                username.setText("");
+                password.setText("");
+            }
+
+        });
+
+        JPanel buttonsPanel = new JPanel();
+        buttonsPanel.setLayout(new GridLayout(1,2,2,2));
+        buttonsPanel.setBorder(new EmptyBorder(25,25, 25, 25));
+        buttonsPanel.setBackground(new Color(87,87,87));
+        buttonsPanel.add(btnEnter);
+        buttonsPanel.add(btnClear);
+
+        //login.setBackground(new Color(128,128,128));
+        orderPanel.setLayout(new GridLayout(typeGroupMap.size(), 1, 0, 5));
+
+        orderPanel.add(titlePanel, BorderLayout.NORTH);
+        orderPanel.add(formPanel, BorderLayout.CENTER);
+        orderPanel.add(lbgrant, BorderLayout.CENTER);
+        orderPanel.add(buttonsPanel, BorderLayout.SOUTH);
+
     }
 
 
@@ -769,7 +878,7 @@ public class MainFrame extends JFrame {
         // initialize main frame and display
         MainFrame myFrame = new MainFrame();
         myFrame.initialize();
-        myFrame.serverLayout();     // initial layout
+        myFrame.loginLayout(false);     // initial layout
         myFrame.setVisible(true);
     }
 }
