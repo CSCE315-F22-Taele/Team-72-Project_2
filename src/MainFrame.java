@@ -916,6 +916,9 @@ public class MainFrame extends JFrame {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
+        HashMap<Item, ArrayList<CustomerOrder>> test = eq.getSalesReport("2022-09-16 08:00:00", "2022-09-23 08:00:00");
+        System.out.println(test);
+
         // configure layout of main panel 
         reportWindow.add(mainPanel);
 
@@ -930,6 +933,9 @@ public class MainFrame extends JFrame {
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        ArrayList<Item> test = eq.getExcessReport("2022-09-16 08:00:00");
+        System.out.println(test);
 
         // configure layout of main panel 
         reportWindow.add(mainPanel);
