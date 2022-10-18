@@ -6,8 +6,8 @@ import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.HashMap;
 
-
-/** ExecQuery Class that executes sql queries on a database
+/** 
+ * ExecQuery Class that executes sql queries on a database
  * @author Conrad Krueger
  */
 public class ExecQuery{
@@ -55,8 +55,7 @@ public class ExecQuery{
                     if (i > 1){
                         res += "|";
                     }
-                    res += result.getString(i);    
-                    //System.out.println("Here: "+(String[]) (a.getArray()));    
+                    res += result.getString(i);     
                 }
             }
             
@@ -88,14 +87,11 @@ public class ExecQuery{
 
             ArrayList<String[]> data = new ArrayList<>();
 
-            
-    
 
             while (result.next()) {
                 String[] res = new String[columnsNumber];
                 for (int i = 1; i <= columnsNumber; i++) {
-                    res[i-1] = result.getString(i);    
-                    //System.out.println("Here: "+(String[]) (a.getArray()));    
+                    res[i-1] = result.getString(i);      
                 }
                 data.add(res);
             }
@@ -134,7 +130,6 @@ public class ExecQuery{
     public boolean verifyManager(String user, String pass){
         
         String isManager = run("SELECT role FROM employee WHERE username = '"+user+"'");
-        //System.out.println(isManager + " " + verifyServer(user, pass));
         return verifyServer(user, pass) && isManager.equals("manager");
     }
 
@@ -146,7 +141,6 @@ public class ExecQuery{
      */
     public boolean verifyServer(String user, String pass){
         String res = run("SELECT password FROM employee WHERE username = '"+user+"'");
-        //System.out.println("Res|pass: "+ res + " " + pass);
         return res.equals(pass);
     }
 
@@ -155,7 +149,6 @@ public class ExecQuery{
      * @param item current item whoms price is being altered
      * @param price double that holds new price of item
      */
-    //TODO: change customer price of specified item
     public void changeItemPrice(Item item, double price){
         run("UPDATE item SET customer_price = "+ price + " WHERE name = '" + item.getName() +"'");
         item.setCustomerPrice(price);
@@ -202,7 +195,7 @@ public class ExecQuery{
     }
 
     /**
-     * AUpdates inentory amount when a restock order is placed
+     * Updates inventory amount when a restock order is placed
      * @param LHM linkedhashmap that contains specified item and how many units of it to restock
      * @param employee current user, used to verify if employee is manager
      */
@@ -254,7 +247,11 @@ public class ExecQuery{
 
     }
 
-    //TODO: Updates database with new customer order information
+    /**
+     * Creates a Customer Order in the Database.
+     * @param items ArrayList of Items to be added to a Customer Order
+     * @param employee Employee onject who created the Customer Order
+     */
     public void confirmCustomerOrder(ArrayList<Item> items, Employee employee){
         double price = 0;
         int co_id = Integer.parseInt(run("SELECT COUNT(id) FROM customer_orders"))+1;
@@ -327,10 +324,8 @@ public class ExecQuery{
         run("UPDATE customer_order_items SET price = "+ mainPrice + " WHERE id = '" + original_coi_id+"'");
         run("UPDATE customer_orders SET price = "+ price + " WHERE id = '" + co_id+"'");
 
-
         run("INSERT INTO co_to_coi(co_id, coi_id) VALUES ("+co_id+", " + original_coi_id +")");
-        
-        //System.out.println("Protein: "+ proteinID + " Type: "+ containerID);
+ 
         run("INSERT INTO coi_to_i(coi_id, i_id) VALUES ("+original_coi_id+", " + proteinID +")");
         run("INSERT INTO coi_to_i(coi_id, i_id) VALUES ("+original_coi_id+", " + containerID +")");
         
@@ -363,10 +358,7 @@ public class ExecQuery{
             }
             attrib[k] = res.substring(prev,res.length());
 
-            //System.out.println(attrib[0] + " :id, " + attrib[1] + " : name");
-        
-            //String type = run("SELECT type FROM item OFFSET "+i+" LIMIT 1");
-            //String price_str = run("SELECT customer_price FROM item OFFSET "+i+" LIMIT 1");
+
             Item item = new Item(Integer.parseInt(attrib[0]), attrib[1], Double.parseDouble(attrib[2]),
             Double.parseDouble(attrib[3]), Double.parseDouble(attrib[4]), Double.parseDouble(attrib[5]), 
             attrib[6], Double.parseDouble(attrib[7]), attrib[8], Double.parseDouble(attrib[9]));
@@ -416,8 +408,12 @@ public class ExecQuery{
 
 
     //Reports
-
-
+    /**
+     * Retrieves Customer Orders for each Item between a start date and an end date
+     * @param start string of the start date in the format "yyyy-MM-dd HH:mm:ss"
+     * @param end string of the end date in the format "yyyy-MM-dd HH:mm:ss"
+     * @return HashMap with Item's as keys and an ArrayList of CustomerOrders that contain the Item Key
+     */
     HashMap<Item, ArrayList<CustomerOrder>> getSalesReport(String start, String end){
         HashMap<Item, ArrayList<CustomerOrder>> report = new HashMap<>();
         
@@ -446,6 +442,11 @@ public class ExecQuery{
         return report;
     }
 
+    /**
+     * Retrieves Items between a start date and now who's inventory decreased by less than 10%
+     * @param start string of the start date in the format "yyyy-MM-dd HH:mm:ss"
+     * @return ArrayList of Items who's inventory did not change significantly
+     */
     ArrayList<Item> getExcessReport(String start){
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");  
         Date date = new Date();  
@@ -472,6 +473,10 @@ public class ExecQuery{
         return report;
     }
 
+    /**
+     * Retrieves Items who's inventory is less than it's specified minimum amount  
+     * @return ArrayList of Items that have too low of inventory.
+     */
     ArrayList<Item> getRestockReport(){
 
         ArrayList<String[]> res = runArrayList("SELECT name, inventory FROM item");
@@ -491,7 +496,6 @@ public class ExecQuery{
 
 
 
-
     public static void main(String[] args) throws Exception{
         ExecQuery ex = new ExecQuery("krueger", "730001845");
         
@@ -506,33 +510,7 @@ public class ExecQuery{
             }
             System.out.println();
         }
-        /* 
-        Item test[] = ex.getItems();
-
-        Employee conrad = new Employee(2,"Conrad", "Krueger", "CKrueg", "730001845", "manager");
-
-        ArrayList<Item> items = new ArrayList<>();
-        for (Item i : test)
-            items.add(i);
-
-        ex.confirmCustomerOrder(items, conrad);
         
-        */
-
-
-        /* 
-        double uno = ex.getItemPrice("Steak");
-        double dos = ex.getItemPrice("Ground Beef");
-        double tres = ex.getItemPrice("Bowls");
-        try{
-            double cuatro = ex.getItemPrice("spaghetti");
-        }catch (Exception e){
-            System.out.println("No spaghetti...");
-        }
-      
-        System.out.println((uno/2)*2 + " " + (dos/2)*2 + " " + (tres/2)*2);
-        */
-
         ex.close();
     }
 
