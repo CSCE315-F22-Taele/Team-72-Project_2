@@ -417,19 +417,26 @@ public class ExecQuery{
     HashMap<Item, ArrayList<CustomerOrder>> getSalesReport(String start, String end){
         HashMap<Item, ArrayList<CustomerOrder>> report = new HashMap<>();
         
-        ArrayList<String[]> res = runArrayList("select * from customer_orders WHERE time_of_order BETWEEN '"+start+"' AND '"+end+"'");
+        //ArrayList<String[]> res = runArrayList("select * from customer_orders WHERE time_of_order BETWEEN '"+start+"' AND '"+end+"'");
         Item[] items = getItems();
 
         //Populate hashmap
         for (Item i: items){
-            report.put(i, new ArrayList<CustomerOrder>());
-        }
 
+            ArrayList<String[]> res = runArrayList("select * from customer_orders where id in (select co_id from co_to_coi where coi_id in (select coi_id from coi_to_i where i_id = "+i.getId()+")) and time_of_order BETWEEN '"+start+"' AND '"+end+"'");
+            ArrayList<CustomerOrder> cos = new ArrayList<>();
+            for (String[] attrib: res){
+                cos.add(new CustomerOrder(Long.parseLong(attrib[0]), Double.parseDouble(attrib[1]), attrib[2], Integer.parseInt(attrib[3])));
+            }
+
+            report.put(i, cos);
+        }
+        /* 
         for (String[] arr: res){
             CustomerOrder co = new CustomerOrder(Long.parseLong(arr[0]), Double.parseDouble(arr[1]), arr[2], Integer.parseInt(arr[3]));
 
             ArrayList<String[]> itemNames = runArrayList("SELECT name FROM item WHERE id IN (SELECT i_id from coi_to_i WHERE coi_id IN (SELECT coi_id FROM co_to_coi WHERE co_id="+co.getId()+"))");
-            
+        
             for (String[] name: itemNames){
                 Item i = getItem(name[0]);
                 
@@ -437,7 +444,7 @@ public class ExecQuery{
                 single_report.add(co);
                 report.put(i, single_report);
             }
-        }
+        }*/
         
         return report;
     }
