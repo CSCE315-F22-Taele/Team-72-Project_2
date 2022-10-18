@@ -72,6 +72,20 @@ public class Item{
     }
 
     @Override
+    public boolean equals(Object o){
+        if (o == this){
+            return true;
+        }
+
+        if (!(o instanceof Item)){
+            return false;
+        }
+        Item i = (Item) o;
+
+        return (i.getId() == getId());
+    }
+
+    @Override
     public String toString(){
         String str = "id: " + getId() + ", name: " + getName() 
         + ", customer price: " + getCustomerPrice() + ", restock price: " + getRestockPrice()
