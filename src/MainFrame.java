@@ -1,14 +1,17 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.nio.file.attribute.GroupPrincipal;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.List;
 
 import javax.imageio.ImageReader;
+import javax.imageio.plugins.jpeg.JPEGQTable;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
+import javax.swing.plaf.basic.BasicComboBoxUI.ItemHandler;
 
 /**
  * Class for the GUI of the Point-of-Scale system.
@@ -89,8 +92,8 @@ public class MainFrame extends JFrame {
                 orderPanel.removeAll();
                 orderPanel.revalidate();
                 orderPanel.repaint();
-                //loginLayout(true);
-                managerLayout();
+                loginLayout(true);
+                //managerLayout();
                 setVisible(true);
             }
         });
@@ -910,67 +913,131 @@ public class MainFrame extends JFrame {
 
     // TODO: finish function
     void displaySalesReport() {
-        
-
-        
-
-        // reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
-
-        // mainPanel.setLayout(new GridLayout(100, 1, 0, 0));
-        // for (int i = 0; i < 100; i++) {
-        //     JLabel lab = new JLabel("bruh");
-        //     lab.setFont(paragraphFont);
-        //     mainPanel.add(lab);
-        // }
-
-        // reportWindow.setSize(375, 250);
-
-        // // configure layout of main panel 
-        // reportWindow.add(mainPanel);
-
-        // // edit remoaning styles
-        // // reportWindow.setMinimumSize(new Dimension(720, 480));
-        // reportWindow.setVisible(true);
-
         // frame and panel initialization
         JFrame reportWindow = new JFrame("Sales Report");
         reportWindow.setTitle("JScrollablePanel Test");
         reportWindow.setLayout(new BorderLayout());
-        // JPanel panel = createPanel();
-
-        HashMap<Item, ArrayList<CustomerOrder>> orders = eq.getSalesReport("2022-09-16 08:00:00", "2022-09-16 8:01:00");
-        System.out.println(orders);
         
-
         JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new GridLayout(100, 4, 0, 0));
-        for (int i=0; i < 100; i++) {
-            for (int j=0; j < 4; j++) {
-                JLabel label = new JLabel("label " + i + ", " + j);
-                label.setFont(paragraphFont);
-                // label.setFont(new Font("Arial", Font.PLAIN, 20));
-                mainPanel.add(label);
+        mainPanel.setLayout(new BorderLayout());
+
+        JPanel queries = new JPanel();
+        queries.setLayout(new GridLayout(3, 2));
+
+        JLabel startDate = new JLabel("Start Date:");
+        JLabel endDate = new JLabel("End Date:");
+
+        JTextField startDateField = new JTextField();
+        JTextField endDateField = new JTextField();
+
+        JButton confBtn = new JButton("Submit");
+
+        queries.add(startDate);
+        queries.add(startDateField);
+        queries.add(endDate);
+        queries.add(endDateField);
+        queries.add(confBtn);
+
+        mainPanel.add(queries, BorderLayout.NORTH);
+
+        confBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String startDateStr = startDateField.getText();
+                String endDateStr = endDateField.getText();
+
+                HashMap<Item, ArrayList<CustomerOrder>> orders;
+                try {
+                    orders = eq.getSalesReport(startDateStr, endDateStr);
+                }   
+                catch (Exception err) {
+                    System.out.println("Error");
+                    return;
+                }
+
+                ArrayList<JPanel> tablePanels = new ArrayList<>();
+        
+                for (Map.Entry<Item, ArrayList<CustomerOrder>> entry: orders.entrySet()) {
+                    if (entry.getValue().size() > 0) {
+                        JPanel titlePanel = new JPanel();
+                        titlePanel.setLayout(new BorderLayout());
+                        JLabel itemName = new JLabel(entry.getKey().getName());
+                        itemName.setFont(subtitleFont);
+                        titlePanel.add(itemName, BorderLayout.NORTH);
+        
+                        JPanel groupPanel = new JPanel();
+                        groupPanel.setLayout(new BorderLayout());
+        
+                        JPanel orderTableContainer = new JPanel();
+                        orderTableContainer.setLayout(new BorderLayout());
+                        orderTableContainer.setBorder(new EmptyBorder(0, 100, 0, 0));
+        
+                        JPanel orderTable = new JPanel();
+                        orderTable.setLayout(new GridLayout(entry.getValue().size(), 4, 0, 0));
+                        for (CustomerOrder co: entry.getValue()) {
+                            JLabel idLab = new JLabel(Long.toString(co.getId()));
+                            JLabel priceLab = new JLabel(Double.toString(co.getPrice()));
+                            JLabel timeLab = new JLabel(co.getTimeOfOrderStr());
+                            JLabel empLab = new JLabel(Long.toString(co.getEmployeeId()));
+        
+                            idLab.setFont(paragraphFont);
+                            priceLab.setFont(paragraphFont);
+                            timeLab.setFont(paragraphFont);
+                            empLab.setFont(paragraphFont);
+        
+                            orderTable.add(idLab);
+                            orderTable.add(priceLab);
+                            orderTable.add(timeLab);
+                            orderTable.add(empLab);
+                        }
+                        orderTableContainer.add(orderTable, BorderLayout.NORTH);
+        
+                        groupPanel.add(itemName, BorderLayout.NORTH);
+                        groupPanel.add(orderTableContainer, BorderLayout.CENTER);
+        
+                        tablePanels.add(groupPanel);
+                    }
+                }
+        
+                JPanel gridPanel = new JPanel();
+                gridPanel.setLayout(new GridLayout(tablePanels.size(), 1, 0, 0));
+        
+                for(JPanel pan: tablePanels) {
+                    gridPanel.add(pan);
+                }
+
+                mainPanel.add(gridPanel, BorderLayout.CENTER);
+
+                reportWindow.invalidate();
+                reportWindow.validate();
+                reportWindow.repaint();
             }
-        }
+        });
+
 
         reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
         reportWindow.setSize(720, 480);
-        // reportWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         reportWindow.setLocationRelativeTo(null);
         reportWindow.setVisible(true);
     }
+
+
     // TODO: finish function
     void displayExcessReport() {
         // frame and panel initialization
         JFrame reportWindow = new JFrame("Excess Report");
+
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
 
-        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BorderLayout());
+
+        titlePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JLabel titleText = new JLabel("Excess Report: All items that sold < 10% of inventory between a start date and now");
         titleText.setFont(titleFont);
-        mainPanel.add(titleText);
+        titlePanel.add(titleText, BorderLayout.NORTH);
 
         
         JPanel top = new JPanel();
@@ -1034,6 +1101,9 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e){
                 date.setText("");
+                itemShow.removeAll();
+                itemShow.revalidate();
+                itemShow.repaint();
             }
         });
         
@@ -1053,8 +1123,8 @@ public class MainFrame extends JFrame {
         rowSelect.add(blank);
         rowSelect.add(blank);
 
-        itemShow.add(rowSelect);
-        itemShow.add(rowTop);
+        titlePanel.add(rowSelect ,BorderLayout.CENTER);
+        titlePanel.add(rowTop, BorderLayout.SOUTH);
 
         btnEnter.addActionListener(new ActionListener(){
  
@@ -1113,14 +1183,15 @@ public class MainFrame extends JFrame {
                 }
 
                 //System.out.println(excess); 
+
+                reportWindow.invalidate();
+                reportWindow.validate();
+                reportWindow.repaint();
             }
         });
 
-
-    
-
         // configure layout of main panel 
-        reportWindow.add(mainPanel, BorderLayout.NORTH);
+        // reportWindow.add(mainPanel, BorderLayout.NORTH);
         /*select.add(lbdate);
         select.add(date);
         
@@ -1135,26 +1206,153 @@ public class MainFrame extends JFrame {
         reportWindow.add(top);
         //reportWindow.add(itemShow);
 
+        mainPanel.add(titlePanel, BorderLayout.NORTH);
+        mainPanel.add(top, BorderLayout.CENTER);
 
-        // edit remoaning styles
-        reportWindow.setMinimumSize(new Dimension(720, 480));
+
+        reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
+        reportWindow.setSize(720, 480);
+        reportWindow.setLocationRelativeTo(null);
         reportWindow.setVisible(true);
+
+        // // edit remoaning styles
+        // reportWindow.setMinimumSize(new Dimension(720, 480));
+        // reportWindow.setVisible(true);
     }
-    // TODO: finish function
+
+    
     void displayRestockReport() {
         // frame and panel initialization
         JFrame reportWindow = new JFrame("Restock Report");
+
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
-        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // configure layout of main panel 
-        reportWindow.add(mainPanel);
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BorderLayout());
+
+        titlePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JLabel titleText = new JLabel("Restock Report: list of items whose current inventory is less than the item's minimum allowed amount before needing to restock");
+        titleText.setFont(titleFont);
+        titlePanel.add(titleText, BorderLayout.NORTH);
+
+        
+        JPanel top = new JPanel();
+        top.setLayout(new GridLayout(1,1));
 
 
-        // edit remoaning styles
-        reportWindow.setMinimumSize(new Dimension(720, 480));
+        JPanel itemShow = new JPanel();
+
+        int item_size = eq.getItems().length;
+        itemShow.setLayout(new GridLayout(item_size+1,1,1,10));
+
+
+        JLabel blank = new JLabel("");
+
+
+        JPanel rowTop = new JPanel();
+        rowTop.setLayout(new GridLayout(1,8));
+
+        JLabel lbId = new JLabel("ID Number");
+        rowTop.add(lbId);
+
+        JLabel lbName = new JLabel("Name");
+        rowTop.add(lbName);
+
+        JLabel lbCustomerPrice = new JLabel("Customer Price");
+        rowTop.add(lbCustomerPrice);
+
+        JLabel lbRestockPrice = new JLabel("Restock Price");
+        rowTop.add(lbRestockPrice);
+
+        JLabel lbCustomerAmount = new JLabel("Customer Amount");
+        rowTop.add(lbCustomerAmount);
+
+        JLabel lbRestockAmount = new JLabel("Restock Amount");
+        rowTop.add(lbRestockAmount);
+
+        JLabel lbInventory = new JLabel("Inventory Now");
+        rowTop.add(lbInventory);
+
+        JLabel lbMinAmount = new JLabel("Minimum Amount");
+        rowTop.add(lbMinAmount);
+
+        
+
+
+       
+        
+
+        
+        titlePanel.add(rowTop, BorderLayout.SOUTH);
+
+        ArrayList<Item> restock = eq.getRestockReport();
+
+        for (Item item: restock){
+            //System.out.println(item);
+
+            JPanel row = new JPanel();
+            row.setLayout(new GridLayout(1,8));
+
+            String unit = item.getOrderUnit();
+
+
+            JLabel id = new JLabel(String.valueOf((Integer)item.getId()));
+            row.add(id);
+
+            JLabel name = new JLabel(item.getName() + " (" + item.getType() + ")");
+            row.add(name);
+
+            JLabel customer_price = new JLabel("$" + String.valueOf((Double) item.getCustomerPrice()));
+            row.add(customer_price);
+
+            JLabel restock_price = new JLabel("$" + String.valueOf((Double) item.getRestockPrice()));
+            row.add(restock_price);
+            
+            JLabel customer_amount = new JLabel(String.valueOf((Double) item.getCustomerAmount()) + " " + unit);
+            row.add(customer_amount);
+
+            JLabel restock_amount = new JLabel(String.valueOf((Double) item.getRestockAmount()) + " " + unit);
+            row.add(restock_amount);
+
+            JLabel inventory = new JLabel(String.valueOf((Double) item.getInventory()) + " " + unit);
+            row.add(inventory);
+
+            JLabel min_amount = new JLabel(String.valueOf((Double) item.getMinAmount()) + " " + unit);
+            row.add(min_amount);
+
+            itemShow.add(row);
+
+
+
+        }
+
+        //System.out.println(excess); 
+
+        reportWindow.invalidate();
+        reportWindow.validate();
+        reportWindow.repaint();
+            
+
+
+
+        top.add(itemShow);
+        reportWindow.add(top);
+        //reportWindow.add(itemShow);
+
+        mainPanel.add(titlePanel, BorderLayout.NORTH);
+        mainPanel.add(top, BorderLayout.CENTER);
+
+
+        reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
+        reportWindow.setSize(720, 480);
+        reportWindow.setLocationRelativeTo(null);
         reportWindow.setVisible(true);
+
+        // // edit remoaning styles
+        // reportWindow.setMinimumSize(new Dimension(720, 480));
+        // reportWindow.setVisible(true);
     }
 
 
