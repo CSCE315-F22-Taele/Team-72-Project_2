@@ -1,1 +1,1 @@
-typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"<Unnamed>","l":"ExecQuery"},{"p":"<Unnamed>","l":"FillDataTable"},{"p":"<Unnamed>","l":"Item"},{"p":"<Unnamed>","l":"MainFrame"}]
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"<Unnamed>","l":"CustomerOrder"},{"p":"<Unnamed>","l":"Employee"},{"p":"<Unnamed>","l":"ExecQuery"},{"p":"<Unnamed>","l":"FillDataTable"},{"p":"<Unnamed>","l":"Item"},{"p":"<Unnamed>","l":"MainFrame"},{"p":"<Unnamed>","l":"Pair"}]
