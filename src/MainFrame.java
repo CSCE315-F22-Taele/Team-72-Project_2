@@ -1017,22 +1017,27 @@ public class MainFrame extends JFrame {
 
         reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
         reportWindow.setSize(720, 480);
-        // reportWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         reportWindow.setLocationRelativeTo(null);
         reportWindow.setVisible(true);
     }
+
+
     // TODO: finish function
     void displayExcessReport() {
         // frame and panel initialization
         JFrame reportWindow = new JFrame("Excess Report");
+
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
 
-        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BorderLayout());
+
+        titlePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JLabel titleText = new JLabel("Excess Report: All items that sold < 10% of inventory between a start date and now");
         titleText.setFont(titleFont);
-        mainPanel.add(titleText);
+        titlePanel.add(titleText, BorderLayout.NORTH);
 
         
         JPanel top = new JPanel();
@@ -1096,6 +1101,9 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e){
                 date.setText("");
+                itemShow.removeAll();
+                itemShow.revalidate();
+                itemShow.repaint();
             }
         });
         
@@ -1115,8 +1123,8 @@ public class MainFrame extends JFrame {
         rowSelect.add(blank);
         rowSelect.add(blank);
 
-        itemShow.add(rowSelect);
-        itemShow.add(rowTop);
+        titlePanel.add(rowSelect ,BorderLayout.CENTER);
+        titlePanel.add(rowTop, BorderLayout.SOUTH);
 
         btnEnter.addActionListener(new ActionListener(){
  
@@ -1175,14 +1183,19 @@ public class MainFrame extends JFrame {
                 }
 
                 //System.out.println(excess); 
+
+                reportWindow.invalidate();
+                reportWindow.validate();
+                reportWindow.repaint();
             }
         });
 
 
     
 
+
         // configure layout of main panel 
-        reportWindow.add(mainPanel, BorderLayout.NORTH);
+        // reportWindow.add(mainPanel, BorderLayout.NORTH);
         /*select.add(lbdate);
         select.add(date);
         
@@ -1197,10 +1210,18 @@ public class MainFrame extends JFrame {
         reportWindow.add(top);
         //reportWindow.add(itemShow);
 
+        mainPanel.add(titlePanel, BorderLayout.NORTH);
+        mainPanel.add(top, BorderLayout.CENTER);
 
-        // edit remoaning styles
-        reportWindow.setMinimumSize(new Dimension(720, 480));
+
+        reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
+        reportWindow.setSize(720, 480);
+        reportWindow.setLocationRelativeTo(null);
         reportWindow.setVisible(true);
+
+        // // edit remoaning styles
+        // reportWindow.setMinimumSize(new Dimension(720, 480));
+        // reportWindow.setVisible(true);
     }
     // TODO: finish function
     void displayRestockReport() {
