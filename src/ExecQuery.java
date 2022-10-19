@@ -449,16 +449,7 @@ public class ExecQuery{
         return report;
     }
 
-    class Pair<T,K>{
-        public T first;
-        public K second;
-
-        public Pair(T _first, K _second){
-            first = _first;
-            second = _second;
-        }
-
-    }
+ 
     /**
      * Retrieves Items between a start date and now who's inventory decreased by less than 10%
      * @param start string of the start date in the format "yyyy-MM-dd HH:mm:ss"
