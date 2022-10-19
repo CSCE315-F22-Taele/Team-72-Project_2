@@ -1,14 +1,17 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.nio.file.attribute.GroupPrincipal;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.List;
 
 import javax.imageio.ImageReader;
+import javax.imageio.plugins.jpeg.JPEGQTable;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
+import javax.swing.plaf.basic.BasicComboBoxUI.ItemHandler;
 
 /**
  * Class for the GUI of the Point-of-Scale system.
@@ -910,54 +913,107 @@ public class MainFrame extends JFrame {
 
     // TODO: finish function
     void displaySalesReport() {
-        
-
-        
-
-        // reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
-
-        // mainPanel.setLayout(new GridLayout(100, 1, 0, 0));
-        // for (int i = 0; i < 100; i++) {
-        //     JLabel lab = new JLabel("bruh");
-        //     lab.setFont(paragraphFont);
-        //     mainPanel.add(lab);
-        // }
-
-        // reportWindow.setSize(375, 250);
-
-        // // configure layout of main panel 
-        // reportWindow.add(mainPanel);
-
-        // // edit remoaning styles
-        // // reportWindow.setMinimumSize(new Dimension(720, 480));
-        // reportWindow.setVisible(true);
-
         // frame and panel initialization
         JFrame reportWindow = new JFrame("Sales Report");
         reportWindow.setTitle("JScrollablePanel Test");
         reportWindow.setLayout(new BorderLayout());
-        // JPanel panel = createPanel();
-
-        HashMap<Item, ArrayList<CustomerOrder>> orders = eq.getSalesReport("2022-09-16 08:00:00", "2022-09-16 8:01:00");
-
-        for (Map.Entry<Item, ArrayList<CustomerOrder>> entry: orders.entrySet()) {
-            System.out.println(entry.getKey());
-            if (entry.getValue().size() > 0) {
-                System.out.println(entry.getKey().getName());
-            }
-        }
-
-
+        
         JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new GridLayout(100, 4, 0, 0));
-        for (int i=0; i < 100; i++) {
-            for (int j=0; j < 4; j++) {
-                JLabel label = new JLabel("label " + i + ", " + j);
-                label.setFont(paragraphFont);
-                // label.setFont(new Font("Arial", Font.PLAIN, 20));
-                mainPanel.add(label);
+        mainPanel.setLayout(new BorderLayout());
+
+        JPanel queries = new JPanel();
+        queries.setLayout(new GridLayout(3, 2));
+
+        JLabel startDate = new JLabel("Start Date:");
+        JLabel endDate = new JLabel("End Date:");
+
+        JTextField startDateField = new JTextField();
+        JTextField endDateField = new JTextField();
+
+        JButton confBtn = new JButton("Submit");
+
+        queries.add(startDate);
+        queries.add(startDateField);
+        queries.add(endDate);
+        queries.add(endDateField);
+        queries.add(confBtn);
+
+        mainPanel.add(queries, BorderLayout.NORTH);
+
+        confBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String startDateStr = startDateField.getText();
+                String endDateStr = endDateField.getText();
+
+                HashMap<Item, ArrayList<CustomerOrder>> orders;
+                try {
+                    orders = eq.getSalesReport(startDateStr, endDateStr);
+                }   
+                catch (Exception err) {
+                    System.out.println("Error");
+                    return;
+                }
+
+                ArrayList<JPanel> tablePanels = new ArrayList<>();
+        
+                for (Map.Entry<Item, ArrayList<CustomerOrder>> entry: orders.entrySet()) {
+                    if (entry.getValue().size() > 0) {
+                        JPanel titlePanel = new JPanel();
+                        titlePanel.setLayout(new BorderLayout());
+                        JLabel itemName = new JLabel(entry.getKey().getName());
+                        itemName.setFont(subtitleFont);
+                        titlePanel.add(itemName, BorderLayout.NORTH);
+        
+                        JPanel groupPanel = new JPanel();
+                        groupPanel.setLayout(new BorderLayout());
+        
+                        JPanel orderTableContainer = new JPanel();
+                        orderTableContainer.setLayout(new BorderLayout());
+                        orderTableContainer.setBorder(new EmptyBorder(0, 100, 0, 0));
+        
+                        JPanel orderTable = new JPanel();
+                        orderTable.setLayout(new GridLayout(entry.getValue().size(), 4, 0, 0));
+                        for (CustomerOrder co: entry.getValue()) {
+                            JLabel idLab = new JLabel(Long.toString(co.getId()));
+                            JLabel priceLab = new JLabel(Double.toString(co.getPrice()));
+                            JLabel timeLab = new JLabel(co.getTimeOfOrderStr());
+                            JLabel empLab = new JLabel(Long.toString(co.getEmployeeId()));
+        
+                            idLab.setFont(paragraphFont);
+                            priceLab.setFont(paragraphFont);
+                            timeLab.setFont(paragraphFont);
+                            empLab.setFont(paragraphFont);
+        
+                            orderTable.add(idLab);
+                            orderTable.add(priceLab);
+                            orderTable.add(timeLab);
+                            orderTable.add(empLab);
+                        }
+                        orderTableContainer.add(orderTable, BorderLayout.NORTH);
+        
+                        groupPanel.add(itemName, BorderLayout.NORTH);
+                        groupPanel.add(orderTableContainer, BorderLayout.CENTER);
+        
+                        tablePanels.add(groupPanel);
+                    }
+                }
+        
+                JPanel gridPanel = new JPanel();
+                gridPanel.setLayout(new GridLayout(tablePanels.size(), 1, 0, 0));
+        
+                for(JPanel pan: tablePanels) {
+                    gridPanel.add(pan);
+                }
+
+                mainPanel.add(gridPanel, BorderLayout.CENTER);
+
+                reportWindow.invalidate();
+                reportWindow.validate();
+                reportWindow.repaint();
             }
-        }
+        });
+
 
         reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
         reportWindow.setSize(720, 480);
