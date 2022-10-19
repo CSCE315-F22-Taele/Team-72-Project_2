@@ -299,7 +299,12 @@ public class MainFrame extends JFrame {
     }
 
 
-
+    /**
+     * Depicts prompt for a server or manager to log into the GUI with a username and password. 
+     * <p>
+     * Access is denied to other panels until a successful password and username is inputed.
+     * @param isManagerPanel boolean that determines if only managers should access the next panel.
+     */
     void loginLayout(boolean isManagerPanel){
         String ttl = "";
         if (isManagerPanel){
@@ -1049,7 +1054,9 @@ public class MainFrame extends JFrame {
     }
 
 
-    // TODO: finish function
+    /**
+     * Displays a list of Items who's inventory has dropped by less than 10% between a start date and now.
+     */
     void displayExcessReport() {
         // frame and panel initialization
         JFrame reportWindow = new JFrame("Excess Report");
@@ -1089,6 +1096,7 @@ public class MainFrame extends JFrame {
         JLabel blank = new JLabel("");
 
 
+        //Labels for columns
         JPanel rowTop = new JPanel();
         rowTop.setLayout(new GridLayout(1,9));
 
@@ -1121,7 +1129,7 @@ public class MainFrame extends JFrame {
 
         
 
-
+        //Buttons to clear user input and clear table
         JButton btnClear = new JButton("Clear");
         btnClear.setFont(subtitleFont);
         btnClear.addActionListener(new ActionListener(){
@@ -1135,9 +1143,11 @@ public class MainFrame extends JFrame {
         });
         
 
+        //Buttons to accept user input and execute sql query to the database.
         JButton btnEnter = new JButton("Enter");
         btnEnter.setFont(subtitleFont);
 
+        //Put Input and Delete mechanisms in one row
         JPanel rowSelect = new JPanel();
         rowSelect.setLayout(new GridLayout(1,9));
         rowSelect.add(lbdate);
@@ -1159,6 +1169,7 @@ public class MainFrame extends JFrame {
             public void actionPerformed(ActionEvent e){
                 ArrayList<Pair<Item, Double>> excess;
                 try{
+                    //Retrives list of items and their corresponding old inventory amount as a Pair object
                     excess = eq.getExcessReport(date.getText()); 
                 }catch(Exception execpt){
                     excess = new ArrayList<>();
@@ -1175,7 +1186,7 @@ public class MainFrame extends JFrame {
 
                     String unit = item.getOrderUnit();
 
-
+                    //Depicts all of the attributes of a single Item
                     JLabel id = new JLabel(String.valueOf((Integer)item.getId()));
                     row.add(id);
 
@@ -1209,8 +1220,6 @@ public class MainFrame extends JFrame {
 
                 }
 
-                //System.out.println(excess); 
-
                 reportWindow.invalidate();
                 reportWindow.validate();
                 reportWindow.repaint();
@@ -1229,6 +1238,7 @@ public class MainFrame extends JFrame {
 
 
         top.add(select);*/
+
         top.add(itemShow);
         reportWindow.add(top);
         //reportWindow.add(itemShow);
@@ -1236,7 +1246,7 @@ public class MainFrame extends JFrame {
         mainPanel.add(titlePanel, BorderLayout.NORTH);
         mainPanel.add(top, BorderLayout.CENTER);
 
-
+        //Scrollable
         reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
         reportWindow.setSize(720, 480);
         reportWindow.setLocationRelativeTo(null);
@@ -1247,7 +1257,9 @@ public class MainFrame extends JFrame {
         // reportWindow.setVisible(true);
     }
 
-    
+    /**
+     * Depicts list of Items whose current inventory is less than its specified minimum amount
+     */
     void displayRestockReport() {
         // frame and panel initialization
         JFrame reportWindow = new JFrame("Restock Report");
@@ -1260,6 +1272,8 @@ public class MainFrame extends JFrame {
 
         titlePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
+
+
         JLabel titleText = new JLabel("Restock Report: list of items whose current inventory is less than the item's minimum allowed amount before needing to restock");
         titleText.setFont(titleFont);
         titlePanel.add(titleText, BorderLayout.NORTH);
@@ -1271,6 +1285,7 @@ public class MainFrame extends JFrame {
 
         JPanel itemShow = new JPanel();
 
+        //Determines max amount of rows (items) the JFrame would have to report
         int item_size = eq.getItems().length;
         itemShow.setLayout(new GridLayout(item_size+1,1,1,10));
 
@@ -1278,6 +1293,7 @@ public class MainFrame extends JFrame {
         JLabel blank = new JLabel("");
 
 
+        //Labels for columns
         JPanel rowTop = new JPanel();
         rowTop.setLayout(new GridLayout(1,8));
 
@@ -1307,24 +1323,20 @@ public class MainFrame extends JFrame {
 
         
 
-
-       
-        
-
-        
         titlePanel.add(rowTop, BorderLayout.SOUTH);
 
+        
         ArrayList<Item> restock = eq.getRestockReport();
 
         for (Item item: restock){
-            //System.out.println(item);
+            
 
             JPanel row = new JPanel();
             row.setLayout(new GridLayout(1,8));
 
             String unit = item.getOrderUnit();
 
-
+            //Depicts all of the attributes of a single Item
             JLabel id = new JLabel(String.valueOf((Integer)item.getId()));
             row.add(id);
 
@@ -1355,8 +1367,7 @@ public class MainFrame extends JFrame {
 
         }
 
-        //System.out.println(excess); 
-
+        //Fix sizing issues
         reportWindow.invalidate();
         reportWindow.validate();
         reportWindow.repaint();
@@ -1371,7 +1382,7 @@ public class MainFrame extends JFrame {
         mainPanel.add(titlePanel, BorderLayout.NORTH);
         mainPanel.add(top, BorderLayout.CENTER);
 
-
+        //Scrollable
         reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
         reportWindow.setSize(720, 480);
         reportWindow.setLocationRelativeTo(null);
