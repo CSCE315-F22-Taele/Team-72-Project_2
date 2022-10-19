@@ -1,17 +1,12 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.nio.file.attribute.GroupPrincipal;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.List;
 
-import javax.imageio.ImageReader;
-import javax.imageio.plugins.jpeg.JPEGQTable;
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
-import javax.swing.plaf.basic.BasicComboBoxUI.ItemHandler;
 
 /**
  * Class for the GUI of the Point-of-Scale system.
@@ -911,41 +906,53 @@ public class MainFrame extends JFrame {
     }
 
 
-    // TODO: finish function
+    /**
+     * Display the sales report.
+     * <p>
+     * This funtion will open a new window from the manager layout, ask for start date and 
+     * end date input, and display all of the sales that were made for each item in between
+     * the start date and end date.
+     */
     void displaySalesReport() {
-        // frame and panel initialization
+        // frame initialization
         JFrame reportWindow = new JFrame("Sales Report");
         reportWindow.setTitle("JScrollablePanel Test");
         reportWindow.setLayout(new BorderLayout());
         
+        // panel to contain all sub-panels
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
 
+        // panel for input and submit buttons
         JPanel queries = new JPanel();
         queries.setLayout(new GridLayout(3, 2));
 
+        // initialize query elements
         JLabel startDate = new JLabel("Start Date:");
         JLabel endDate = new JLabel("End Date:");
-
         JTextField startDateField = new JTextField();
         JTextField endDateField = new JTextField();
-
         JButton confBtn = new JButton("Submit");
 
+        // add elements to query grid
         queries.add(startDate);
         queries.add(startDateField);
         queries.add(endDate);
         queries.add(endDateField);
         queries.add(confBtn);
 
+        // add query grid to main panel
         mainPanel.add(queries, BorderLayout.NORTH);
 
+        // button functionality - process sales for timeframe
         confBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // get string inputs
                 String startDateStr = startDateField.getText();
                 String endDateStr = endDateField.getText();
 
+                // try and get sales between timeframe
                 HashMap<Item, ArrayList<CustomerOrder>> orders;
                 try {
                     orders = eq.getSalesReport(startDateStr, endDateStr);
@@ -955,66 +962,86 @@ public class MainFrame extends JFrame {
                     return;
                 }
 
+                // array list of panles coordinating sales to items
                 ArrayList<JPanel> tablePanels = new ArrayList<>();
         
+                // iterate through each entry in the hash map to list out individual sales
                 for (Map.Entry<Item, ArrayList<CustomerOrder>> entry: orders.entrySet()) {
+                    // if there are orders
                     if (entry.getValue().size() > 0) {
+                        // panel for grouping titles to tables
+                        JPanel groupPanel = new JPanel();
+                        groupPanel.setLayout(new BorderLayout());
+
+                        // create title panel and add item name to it
                         JPanel titlePanel = new JPanel();
                         titlePanel.setLayout(new BorderLayout());
                         JLabel itemName = new JLabel(entry.getKey().getName());
                         itemName.setFont(subtitleFont);
                         titlePanel.add(itemName, BorderLayout.NORTH);
         
-                        JPanel groupPanel = new JPanel();
-                        groupPanel.setLayout(new BorderLayout());
-        
+                        // container for order table
                         JPanel orderTableContainer = new JPanel();
                         orderTableContainer.setLayout(new BorderLayout());
                         orderTableContainer.setBorder(new EmptyBorder(0, 100, 0, 0));
         
+                        // table for listing out sales in the table
                         JPanel orderTable = new JPanel();
                         orderTable.setLayout(new GridLayout(entry.getValue().size(), 4, 0, 0));
+
+                        // iterate through orders in the customer orders array list
                         for (CustomerOrder co: entry.getValue()) {
+                            // label for each customer order attribute
                             JLabel idLab = new JLabel(Long.toString(co.getId()));
                             JLabel priceLab = new JLabel(Double.toString(co.getPrice()));
                             JLabel timeLab = new JLabel(co.getTimeOfOrderStr());
                             JLabel empLab = new JLabel(Long.toString(co.getEmployeeId()));
         
+                            // formatting
                             idLab.setFont(paragraphFont);
                             priceLab.setFont(paragraphFont);
                             timeLab.setFont(paragraphFont);
                             empLab.setFont(paragraphFont);
         
+                            // add labels to table
                             orderTable.add(idLab);
                             orderTable.add(priceLab);
                             orderTable.add(timeLab);
                             orderTable.add(empLab);
                         }
+
+                        // add table to container
                         orderTableContainer.add(orderTable, BorderLayout.NORTH);
         
+                        // group title and table container together
                         groupPanel.add(itemName, BorderLayout.NORTH);
                         groupPanel.add(orderTableContainer, BorderLayout.CENTER);
         
+                        // add group to table panels
                         tablePanels.add(groupPanel);
                     }
                 }
         
+                // display table panels one after the other
                 JPanel gridPanel = new JPanel();
                 gridPanel.setLayout(new GridLayout(tablePanels.size(), 1, 0, 0));
         
+                // add each table panel to grid
                 for(JPanel pan: tablePanels) {
                     gridPanel.add(pan);
                 }
 
+                // add gridPanel to mainPanel
                 mainPanel.add(gridPanel, BorderLayout.CENTER);
 
+                // refresh graphics
                 reportWindow.invalidate();
                 reportWindow.validate();
                 reportWindow.repaint();
             }
         });
 
-
+        // scroll functionality and remaining styles
         reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
         reportWindow.setSize(720, 480);
         reportWindow.setLocationRelativeTo(null);
