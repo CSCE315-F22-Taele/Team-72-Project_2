@@ -89,8 +89,8 @@ public class MainFrame extends JFrame {
                 orderPanel.removeAll();
                 orderPanel.revalidate();
                 orderPanel.repaint();
-                loginLayout(true);
-                //managerLayout();
+                //loginLayout(true);
+                managerLayout();
                 setVisible(true);
             }
         });
@@ -932,13 +932,171 @@ public class MainFrame extends JFrame {
         JFrame reportWindow = new JFrame("Excess Report");
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
+
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        ArrayList<Item> test = eq.getExcessReport("2022-09-16 08:00:00");
-        System.out.println(test);
+        JLabel titleText = new JLabel("Excess Report: All items that sold < 10% of inventory between a start date and now");
+        titleText.setFont(titleFont);
+        mainPanel.add(titleText);
+
+        
+        JPanel top = new JPanel();
+        top.setLayout(new GridLayout(1,1));
+
+        JPanel select = new JPanel();
+        select.setLayout(new GridLayout(1,4,1,1));
+
+
+        JLabel lbdate = new JLabel("Input Start Date (yyyy-MM-dd HH:mm:ss):");
+        lbdate.setFont(subtitleFont);
+        lbdate.setForeground(Color.black);
+        JTextField date = new JTextField();
+
+
+        JPanel itemShow = new JPanel();
+
+        int item_size = eq.getItems().length;
+        itemShow.setLayout(new GridLayout(item_size+1,1,1,10));
+
+
+        JLabel blank = new JLabel("");
+
+
+        JPanel rowTop = new JPanel();
+        rowTop.setLayout(new GridLayout(1,8));
+
+        JLabel lbId = new JLabel("ID Number");
+        rowTop.add(lbId);
+
+        JLabel lbName = new JLabel("Name");
+        rowTop.add(lbName);
+
+        JLabel lbCustomerPrice = new JLabel("Customer Price");
+        rowTop.add(lbCustomerPrice);
+
+        JLabel lbRestockPrice = new JLabel("Restock Price");
+        rowTop.add(lbRestockPrice);
+
+        JLabel lbCustomerAmount = new JLabel("Customer Amount");
+        rowTop.add(lbCustomerAmount);
+
+        JLabel lbRestockAmount = new JLabel("Restock Amount");
+        rowTop.add(lbRestockAmount);
+
+        JLabel lbInventory = new JLabel("Inventory");
+        rowTop.add(lbInventory);
+
+        JLabel lbMinAmount = new JLabel("Minimum Amount");
+        rowTop.add(lbMinAmount);
+
+        
+
+
+        JButton btnClear = new JButton("Clear");
+        btnClear.setFont(subtitleFont);
+        btnClear.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e){
+                date.setText("");
+            }
+        });
+        
+        
+
+
+
+        JButton btnEnter = new JButton("Enter");
+        btnEnter.setFont(subtitleFont);
+
+        JPanel rowSelect = new JPanel();
+        rowSelect.setLayout(new GridLayout(1,8));
+        rowSelect.add(lbdate);
+        rowSelect.add(date);
+        rowSelect.add(btnEnter);
+        rowSelect.add(btnClear);
+        rowSelect.add(blank);
+        rowSelect.add(blank);
+        rowSelect.add(blank);
+        rowSelect.add(blank);
+
+        itemShow.add(rowSelect);
+        itemShow.add(rowTop);
+
+        btnEnter.addActionListener(new ActionListener(){
+ 
+            @Override
+            public void actionPerformed(ActionEvent e){
+                ArrayList<Item> excess;
+                try{
+                    excess = eq.getExcessReport(date.getText()); 
+                }catch(Exception execpt){
+                    excess = new ArrayList<>();
+                }
+                 
+                
+
+                for (Item item: excess){
+                    //System.out.println(item);
+
+                    JPanel row = new JPanel();
+                    row.setLayout(new GridLayout(1,8));
+
+                    String unit = item.getOrderUnit();
+
+
+                    JLabel id = new JLabel(String.valueOf((Integer)item.getId()));
+                    row.add(id);
+
+                    JLabel name = new JLabel(item.getName() + " (" + item.getType() + ")");
+                    row.add(name);
+
+                    JLabel customer_price = new JLabel("$" + String.valueOf((Double) item.getCustomerPrice()));
+                    row.add(customer_price);
+
+                    JLabel restock_price = new JLabel("$" + String.valueOf((Double) item.getRestockPrice()));
+                    row.add(restock_price);
+                    
+                    JLabel customer_amount = new JLabel(String.valueOf((Double) item.getCustomerAmount()) + " " + unit);
+                    row.add(customer_amount);
+
+                    JLabel restock_amount = new JLabel(String.valueOf((Double) item.getRestockAmount()) + " " + unit);
+                    row.add(restock_amount);
+
+                    JLabel inventory = new JLabel(String.valueOf((Double) item.getInventory()) + " " + unit);
+                    row.add(inventory);
+
+                    JLabel min_amount = new JLabel(String.valueOf((Double) item.getMinAmount()) + " " + unit);
+                    row.add(min_amount);
+
+                    itemShow.add(row);
+
+
+
+                }
+
+                //System.out.println(excess); 
+            }
+        });
+
+
+    
 
         // configure layout of main panel 
-        reportWindow.add(mainPanel);
+        reportWindow.add(mainPanel, BorderLayout.NORTH);
+        /*select.add(lbdate);
+        select.add(date);
+        
+        select.add(btnEnter);
+        select.add(btnClear);
+
+        select.setMaximumSize(new Dimension(20, 80));
+
+
+        top.add(select);*/
+        top.add(itemShow);
+        reportWindow.add(top);
+        //reportWindow.add(itemShow);
+
 
         // edit remoaning styles
         reportWindow.setMinimumSize(new Dimension(720, 480));
@@ -954,6 +1112,7 @@ public class MainFrame extends JFrame {
 
         // configure layout of main panel 
         reportWindow.add(mainPanel);
+
 
         // edit remoaning styles
         reportWindow.setMinimumSize(new Dimension(720, 480));
