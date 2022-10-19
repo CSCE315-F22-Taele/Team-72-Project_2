@@ -449,31 +449,32 @@ public class ExecQuery{
         return report;
     }
 
+ 
     /**
      * Retrieves Items between a start date and now who's inventory decreased by less than 10%
      * @param start string of the start date in the format "yyyy-MM-dd HH:mm:ss"
      * @return ArrayList of Items who's inventory did not change significantly
      */
-    ArrayList<Item> getExcessReport(String start){
+    ArrayList<Pair<Item,Double>> getExcessReport(String start){
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");  
         Date date = new Date();  
         String end = formatter.format(date).toString();
 
         HashMap<Item, ArrayList<CustomerOrder>> sales = getSalesReport(start, end);
 
-        ArrayList<Item> report = new ArrayList<>();
+        ArrayList<Pair<Item,Double>> report = new ArrayList<>();
 
         for (Item i: sales.keySet()){
             int numOfSales = sales.get(i).size();
             double inventory_now = i.getInventory();
             double customer_amount = i.getCustomerAmount();
 
-            double inventory_before = numOfSales*customer_amount + inventory_now;
+            Double inventory_before = numOfSales*customer_amount + inventory_now;
 
             //calc if it has less than 10 percent
 
             if (inventory_before * 0.90 < inventory_now){
-                report.add(i);
+                report.add(new Pair<Item, Double>(i, inventory_before));
             }
         }
 
