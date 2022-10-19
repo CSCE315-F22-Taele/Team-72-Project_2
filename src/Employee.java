@@ -36,6 +36,10 @@ public class Employee{
         return role;
     }
 
+    /**
+     * creates string of all attributes in employee 
+     * @return String of all attributes of employee
+     */
     @Override
     public String toString(){
         String str = "id: " + getId() + ", First Name: " + getFirst() 

@@ -71,6 +71,10 @@ public class Item{
         return id;
     }
 
+    /**
+     * Overidden equals operator for Item class 
+     * @return boolean that represents if item objects are equal
+     */
     @Override
     public boolean equals(Object o){
         if (o == this){
@@ -84,6 +88,11 @@ public class Item{
 
         return (i.getId() == getId());
     }
+
+    /**
+     * creates string of all attributes in item 
+     * @return String of all attributes of item
+     */
 
     @Override
     public String toString(){

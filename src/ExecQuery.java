@@ -453,7 +453,7 @@ public class ExecQuery{
     /**
      * Retrieves Items between a start date and now who's inventory decreased by less than 10%
      * @param start string of the start date in the format "yyyy-MM-dd HH:mm:ss"
-     * @return ArrayList of Items who's inventory did not change significantly
+     * @return ArrayList of a pair of items and their old inventories to be compared with the current inventory
      */
     ArrayList<Pair<Item,Double>> getExcessReport(String start){
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");  

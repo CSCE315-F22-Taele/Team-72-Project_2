@@ -34,6 +34,11 @@ public class CustomerOrder{
     public int getEmployeeId(){
         return employee_id;
     }
+
+    /**
+     * creates string of all attributes in customerOrder
+     * @return String of all attributes of customerOrder
+     */
     @Override
     public String toString(){
         String res = "id = "+id+", price = "+price+", time of order = "+time_of_order+", employee id = "+employee_id;
