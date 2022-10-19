@@ -1002,7 +1002,7 @@ public class MainFrame extends JFrame {
 
 
         JPanel rowTop = new JPanel();
-        rowTop.setLayout(new GridLayout(1,8));
+        rowTop.setLayout(new GridLayout(1,9));
 
         JLabel lbId = new JLabel("ID Number");
         rowTop.add(lbId);
@@ -1022,8 +1022,11 @@ public class MainFrame extends JFrame {
         JLabel lbRestockAmount = new JLabel("Restock Amount");
         rowTop.add(lbRestockAmount);
 
-        JLabel lbInventory = new JLabel("Inventory");
+        JLabel lbInventory = new JLabel("Inventory Now");
         rowTop.add(lbInventory);
+
+        JLabel lbInventoryBefore = new JLabel("Inventory Before");
+        rowTop.add(lbInventoryBefore);
 
         JLabel lbMinAmount = new JLabel("Minimum Amount");
         rowTop.add(lbMinAmount);
@@ -1040,19 +1043,17 @@ public class MainFrame extends JFrame {
             }
         });
         
-        
-
-
 
         JButton btnEnter = new JButton("Enter");
         btnEnter.setFont(subtitleFont);
 
         JPanel rowSelect = new JPanel();
-        rowSelect.setLayout(new GridLayout(1,8));
+        rowSelect.setLayout(new GridLayout(1,9));
         rowSelect.add(lbdate);
         rowSelect.add(date);
         rowSelect.add(btnEnter);
         rowSelect.add(btnClear);
+        rowSelect.add(blank);
         rowSelect.add(blank);
         rowSelect.add(blank);
         rowSelect.add(blank);
@@ -1065,7 +1066,7 @@ public class MainFrame extends JFrame {
  
             @Override
             public void actionPerformed(ActionEvent e){
-                ArrayList<Item> excess;
+                ArrayList<Pair<Item, Double>> excess;
                 try{
                     excess = eq.getExcessReport(date.getText()); 
                 }catch(Exception execpt){
@@ -1074,8 +1075,9 @@ public class MainFrame extends JFrame {
                  
                 
 
-                for (Item item: excess){
+                for (Pair<Item, Double> pair: excess){
                     //System.out.println(item);
+                    Item item = pair.first;
 
                     JPanel row = new JPanel();
                     row.setLayout(new GridLayout(1,8));
@@ -1103,6 +1105,9 @@ public class MainFrame extends JFrame {
 
                     JLabel inventory = new JLabel(String.valueOf((Double) item.getInventory()) + " " + unit);
                     row.add(inventory);
+
+                    JLabel inventory_before = new JLabel(String.valueOf((Double) pair.second) + " " + unit);
+                    row.add(inventory_before);
 
                     JLabel min_amount = new JLabel(String.valueOf((Double) item.getMinAmount()) + " " + unit);
                     row.add(min_amount);
@@ -1151,8 +1156,6 @@ public class MainFrame extends JFrame {
 
         // configure layout of main panel 
         reportWindow.add(mainPanel);
-
-        System.out.println("test");
 
 
         // edit remoaning styles
