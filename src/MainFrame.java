@@ -1113,6 +1113,8 @@ public class MainFrame extends JFrame {
         // configure layout of main panel 
         reportWindow.add(mainPanel);
 
+        System.out.println("test");
+
 
         // edit remoaning styles
         reportWindow.setMinimumSize(new Dimension(720, 480));
