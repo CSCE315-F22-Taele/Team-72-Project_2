@@ -910,20 +910,53 @@ public class MainFrame extends JFrame {
 
     // TODO: finish function
     void displaySalesReport() {
+        
+
+        
+
+        // reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
+
+        // mainPanel.setLayout(new GridLayout(100, 1, 0, 0));
+        // for (int i = 0; i < 100; i++) {
+        //     JLabel lab = new JLabel("bruh");
+        //     lab.setFont(paragraphFont);
+        //     mainPanel.add(lab);
+        // }
+
+        // reportWindow.setSize(375, 250);
+
+        // // configure layout of main panel 
+        // reportWindow.add(mainPanel);
+
+        // // edit remoaning styles
+        // // reportWindow.setMinimumSize(new Dimension(720, 480));
+        // reportWindow.setVisible(true);
+
         // frame and panel initialization
         JFrame reportWindow = new JFrame("Sales Report");
+        reportWindow.setTitle("JScrollablePanel Test");
+        reportWindow.setLayout(new BorderLayout());
+        // JPanel panel = createPanel();
+
+        HashMap<Item, ArrayList<CustomerOrder>> orders = eq.getSalesReport("2022-09-16 08:00:00", "2022-09-16 8:01:00");
+        System.out.println(orders);
+        
+
         JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BorderLayout());
-        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        mainPanel.setLayout(new GridLayout(100, 4, 0, 0));
+        for (int i=0; i < 100; i++) {
+            for (int j=0; j < 4; j++) {
+                JLabel label = new JLabel("label " + i + ", " + j);
+                label.setFont(paragraphFont);
+                // label.setFont(new Font("Arial", Font.PLAIN, 20));
+                mainPanel.add(label);
+            }
+        }
 
-        HashMap<Item, ArrayList<CustomerOrder>> test = eq.getSalesReport("2022-09-16 08:00:00", "2022-09-23 08:00:00");
-        System.out.println(test);
-
-        // configure layout of main panel 
-        reportWindow.add(mainPanel);
-
-        // edit remoaning styles
-        reportWindow.setMinimumSize(new Dimension(720, 480));
+        reportWindow.add(BorderLayout.CENTER, new JScrollPane(mainPanel));
+        reportWindow.setSize(720, 480);
+        // reportWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        reportWindow.setLocationRelativeTo(null);
         reportWindow.setVisible(true);
     }
     // TODO: finish function
