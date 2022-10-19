@@ -939,8 +939,14 @@ public class MainFrame extends JFrame {
         // JPanel panel = createPanel();
 
         HashMap<Item, ArrayList<CustomerOrder>> orders = eq.getSalesReport("2022-09-16 08:00:00", "2022-09-16 8:01:00");
-        System.out.println(orders);
-        
+
+        for (Map.Entry<Item, ArrayList<CustomerOrder>> entry: orders.entrySet()) {
+            System.out.println(entry.getKey());
+            if (entry.getValue().size() > 0) {
+                System.out.println(entry.getKey().getName());
+            }
+        }
+
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new GridLayout(100, 4, 0, 0));
