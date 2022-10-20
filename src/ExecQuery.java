@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.HashMap;
 
 /** 
- * ExecQuery Class that executes sql queries on a database
+ * Class that executes sql queries on a database
  * @author Conrad Krueger
  */
 public class ExecQuery{
@@ -431,20 +431,6 @@ public class ExecQuery{
 
             report.put(i, cos);
         }
-        /* 
-        for (String[] arr: res){
-            CustomerOrder co = new CustomerOrder(Long.parseLong(arr[0]), Double.parseDouble(arr[1]), arr[2], Integer.parseInt(arr[3]));
-
-            ArrayList<String[]> itemNames = runArrayList("SELECT name FROM item WHERE id IN (SELECT i_id from coi_to_i WHERE coi_id IN (SELECT coi_id FROM co_to_coi WHERE co_id="+co.getId()+"))");
-        
-            for (String[] name: itemNames){
-                Item i = getItem(name[0]);
-                
-                ArrayList<CustomerOrder> single_report = report.get(i);
-                single_report.add(co);
-                report.put(i, single_report);
-            }
-        }*/
         
         return report;
     }
